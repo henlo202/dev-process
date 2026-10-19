@@ -56,4 +56,4 @@ The user can print a greeting addressed to a given name.
 ## Change log
 | Date | Version | Change |
 |------|---------|--------|
-| 2026-10-19 | 1.0.0 | Approved at G1 (REQ-003 added during review) |
+| 2026-10-19 | 1.0.0 | REQ-001 and NFR-001 approved at G1 for INC-001; REQ-002 to REQ-004 at G1 for INC-002 (REQ-003 added during review) |

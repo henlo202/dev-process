@@ -36,13 +36,15 @@ SEVERITY_ORDER = {ERROR: 0, WARNING: 1, INFO: 2}
 
 # Files that are artefacts but intentionally have no YAML frontmatter.
 NO_FRONTMATTER = {"AGENTS.md", "CHANGELOG.md", ".process/config.yaml"}
-STATUSES = {"draft", "in-review", "approved", "superseded"}
+STATUSES = {"draft", "in-review", "approved", "in-progress", "done", "superseded"}
 DECISIONS = {"approved", "approved-with-conditions", "rejected"}
 
 REQ_DEF = re.compile(r"^#{2,4}\s+((?:REQ|NFR)-\d+)\b", re.MULTILINE)
 REQ_REF = re.compile(r"(?<![A-Za-z0-9])(REQ|NFR)[-_](\d+)(?![0-9])")
 STATUS_LINE = re.compile(r"\*\*Status:\*\*\s*([a-z-]+)", re.IGNORECASE)
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+SLICE = re.compile(r"^\s*[-*]\s+(?:\[[ xX]\]\s+)?S\d+\b", re.MULTILINE)
+DEFAULT_LIMITS = {"max_requirements": 5, "max_slices": 8}
 # Template placeholders such as "<short title>" (contain a space, no attributes).
 PLACEHOLDER = re.compile(r"<(?!!--)[A-Za-z][^<>=\"`\n]*\s[^<>=\"`\n]*>")
 FENCE = re.compile(r"```.*?```", re.DOTALL)
@@ -103,6 +105,11 @@ def validate_frontmatter(rel: str, fm: dict, expected: str, report: Report):
                 problems.append(f"missing `{key}`")
         if "decision" in fm and fm["decision"] not in DECISIONS:
             problems.append(f"`decision` must be one of {sorted(DECISIONS)}")
+    if expected == "increment":
+        if not re.match(r"^INC-\d+$", str(fm.get("increment", ""))):
+            problems.append("`increment` must be an ID like `INC-001`")
+        if not isinstance(fm.get("requirements"), list):
+            problems.append("`requirements` must be a list of requirement IDs (may be empty)")
     if problems:
         report.add(
             f"frontmatter-invalid:{rel}", WARNING,
@@ -209,10 +216,10 @@ def iter_test_files(root: Path, test_paths: list[str]):
                 yield f
 
 
-def check_traceability(root: Path, config: dict, report: Report):
+def check_traceability(root: Path, config: dict, report: Report) -> dict[str, dict]:
     reqs = parse_requirements(root, report)
     if not reqs:
-        return
+        return reqs
     refs: dict[str, list[str]] = {}
     for f in iter_test_files(root, config.get("test_paths") or ["tests"]):
         try:
@@ -254,9 +261,62 @@ def check_traceability(root: Path, config: dict, report: Report):
                 "Fix the ID in the test or add the missing requirement.",
                 "guides/requirements.md",
             )
+    return reqs
 
 
-def check_gates(root: Path, tier: str, report: Report):
+def section(text: str, heading: str) -> str:
+    """Body of the first `## heading` section, without HTML comments."""
+    m = re.search(rf"^##\s+{re.escape(heading)}\s*$(.*?)(?=^##\s|\Z)", text, re.MULTILINE | re.DOTALL)
+    return re.sub(r"<!--.*?-->", "", m.group(1), flags=re.DOTALL).strip() if m else ""
+
+
+def load_increments(root: Path) -> list[dict]:
+    inc_dir = root / "docs" / "increments"
+    increments = []
+    if inc_dir.is_dir():
+        for md in markdown_files(inc_dir):
+            fm, err = read_frontmatter(md)
+            if fm and fm.get("artefact") == "increment":
+                increments.append({**fm, "_file": md.relative_to(root).as_posix(),
+                                   "_text": md.read_text(encoding="utf-8", errors="replace")})
+    return increments
+
+
+def check_increments(increments: list[dict], reqs: dict, config: dict, report: Report):
+    limits = {**DEFAULT_LIMITS, **(config.get("increment_limits") or {})}
+    seen = {}
+    for inc in increments:
+        iid, rel = str(inc.get("increment", "?")), inc["_file"]
+        if iid in seen:
+            report.add(f"duplicate-increment:{iid}", WARNING,
+                       f"`{iid}` is used by both `{seen[iid]}` and `{rel}`.",
+                       "Give each increment a unique INC- ID.", "artefacts/increment.md")
+        seen[iid] = rel
+        in_scope = inc.get("requirements") or []
+        slices = len(SLICE.findall(section(inc["_text"], "Task slices")))
+        over = []
+        if len(in_scope) > limits["max_requirements"]:
+            over.append(f"{len(in_scope)} requirements (limit {limits['max_requirements']})")
+        if slices > limits["max_slices"]:
+            over.append(f"{slices} task slices (limit {limits['max_slices']})")
+        if over:
+            report.add(f"increment-too-large:{iid}", WARNING,
+                       f"Increment `{iid}` ({rel}) exceeds the size limit: {', '.join(over)}.",
+                       "Split it into smaller increments, each with one outcome, or waive it if the overrun is deliberate.",
+                       "guides/increments.md")
+        for rid in in_scope:
+            if reqs and rid not in reqs:
+                report.add(f"unknown-requirement:{rid}", WARNING,
+                           f"Increment `{iid}` lists `{rid}`, which is not defined in `docs/requirements/`.",
+                           "Fix the ID or add the requirement.", "guides/requirements.md")
+        if inc.get("status") == "done" and len(section(inc["_text"], "Demo")) < 20:
+            report.add(f"demo-missing:{iid}", WARNING,
+                       f"Increment `{iid}` is `done` but its Demo section has no evidence.",
+                       "Link or paste the demo that shows each acceptance criterion working.",
+                       "artefacts/demo.md")
+
+
+def check_gates(root: Path, tier: str, increments: list[dict], report: Report):
     if tier == "T1":
         return
     gate_dir = root / "docs" / "gates"
@@ -267,8 +327,10 @@ def check_gates(root: Path, tier: str, report: Report):
             if fm and fm.get("gate"):
                 records.setdefault(str(fm["gate"]), []).append(fm)
 
-    def approved(gate):
-        return any(r.get("decision") in ("approved", "approved-with-conditions") for r in records.get(gate, []))
+    def approved(gate, increment=None):
+        return any(r.get("decision") in ("approved", "approved-with-conditions")
+                   and (increment is None or r.get("increment") == increment)
+                   for r in records.get(gate, []))
 
     if not approved("G0"):
         report.add(
@@ -277,27 +339,14 @@ def check_gates(root: Path, tier: str, report: Report):
             "Hold G0 and record it with `.process/templates/gate-record.md`.",
             "gates/G0-go-no-go.md",
         )
-    req_dir = root / "docs" / "requirements"
-    if req_dir.is_dir() and not approved("G1"):
-        approved_reqs = any(
-            (read_frontmatter(md)[0] or {}).get("status") == "approved" for md in markdown_files(req_dir)
-        )
-        if approved_reqs:
+    for inc in increments:
+        iid = str(inc.get("increment", "?"))
+        if inc.get("status") in ("approved", "in-progress", "done") and not approved("G1", iid):
             report.add(
-                "gate-record-missing:G1", WARNING,
-                "Requirements are marked `approved` but there is no approved G1 gate record.",
-                "Record the G1 decision in `docs/gates/`.",
-                "gates/G1-requirements.md",
-            )
-    arch = root / "docs" / "architecture.md"
-    if tier == "T3" and arch.is_file() and not approved("G2"):
-        fm, _ = read_frontmatter(arch)
-        if (fm or {}).get("status") == "approved":
-            report.add(
-                "gate-record-missing:G2", WARNING,
-                "The architecture is marked `approved` but there is no approved G2 gate record (required for T3).",
-                "Record the G2 decision in `docs/gates/`.",
-                "gates/G2-design.md",
+                f"gate-record-missing:G1:{iid}", WARNING,
+                f"Increment `{iid}` is `{inc.get('status')}` but has no approved G1 (Shape) gate record.",
+                f"Record the G1 decision in `docs/gates/` with `increment: {iid}` in its frontmatter.",
+                "gates/G1-shape.md",
             )
 
 
@@ -408,8 +457,10 @@ def main(argv=None) -> int:
         tier = "T2"
 
     check_artefacts(root, process, tier, report)
-    check_traceability(root, config, report)
-    check_gates(root, tier, report)
+    reqs = check_traceability(root, config, report)
+    increments = load_increments(root)
+    check_increments(increments, reqs, config, report)
+    check_gates(root, tier, increments, report)
     apply_waivers(config, report, dt.date.today())
 
     text = render(report, config.get("project", root.name), tier,

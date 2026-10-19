@@ -138,6 +138,10 @@ class Site:
         nav += "<span></span>"
         if i < len(phases) - 1:
             nav += f'<a href="{rel(here, page_path(phases[i+1]["doc"]))}">{esc(phases[i+1]["id"])} {esc(phases[i+1]["name"])} →</a>'
+        else:
+            first = next(p for p in phases if p.get("loop"))
+            nav += (f'<a href="{rel(here, page_path(first["doc"]))}">↻ next increment: '
+                    f'{esc(first["id"])} {esc(first["name"])}</a>')
         nav += "</nav>"
         return self.panel(rows), nav
 
@@ -149,6 +153,8 @@ class Site:
                                                            if g.get("once_per_initiative") else "")),
             ("Evidence", self.links(here, "artefacts", g["evidence"])),
         ]
+        for tier, extra in (g.get("tier_evidence") or {}).items():
+            rows.append((f"Also for {tier}", self.links(here, "artefacts", extra)))
         return self.panel(rows), ""
 
     def artefact_panel(self, arts, here):
@@ -283,7 +289,7 @@ class Site:
         rows = []
         for t in self.templates:
             src = t.relative_to(ROOT).as_posix()
-            users = ", ".join(a["name"] for a in self.p["artefacts"] if a["template"] == src) or "Pull-request description (G4)"
+            users = ", ".join(a["name"] for a in self.p["artefacts"] if a["template"] == src) or "Pull-request description (G2)"
             rows.append(f'<tr><td><a href="{rel(here, page_path(src))}"><code>{esc(t.name)}</code></a></td><td>{esc(users)}</td></tr>')
         self.write(here, "Templates", "<h1>Templates</h1><table><thead><tr><th>File</th><th>Used for</th></tr></thead>"
                    f"<tbody>{''.join(rows)}</tbody></table>")
@@ -291,22 +297,31 @@ class Site:
     def index(self):
         here = "index.html"
         p = self.p
-        flow = []
-        for ph in p["phases"]:
-            tiers = " ".join(ph["tiers"])
-            flow.append(
-                f'<a class="step phase" data-tiers="{tiers}" href="{rel(here, page_path(ph["doc"]))}">'
-                f'<span class="step-id">{esc(ph["id"])}</span><span class="step-name">{esc(ph["name"])}</span>'
-                f'<span class="step-tiers">{self.tier_badges(ph["tiers"])}</span></a>')
-            if ph["gate"]:
-                g = self.by_id[("gates", ph["gate"])]
-                flow.append(
-                    f'<a class="step gate" data-tiers="{" ".join(g["tiers"])}" href="{rel(here, page_path(g["doc"]))}" '
-                    f'title="{esc(g["name"])}: approved by the Owner"><span class="diamond"><span>{esc(g["id"])}</span></span>'
-                    f'<span class="gate-name">{esc(g["name"])}</span></a>')
-            else:
-                flow.append('<span class="step arrow" aria-hidden="true">→</span>')
-        flow.pop()  # no connector after the last phase
+        def steps(phases):
+            out = []
+            for ph in phases:
+                out.append(
+                    f'<a class="step phase" data-tiers="{" ".join(ph["tiers"])}" href="{rel(here, page_path(ph["doc"]))}">'
+                    f'<span class="step-id">{esc(ph["id"])}</span><span class="step-name">{esc(ph["name"])}</span>'
+                    f'<span class="step-tiers">{self.tier_badges(ph["tiers"])}</span></a>')
+                if ph["gate"]:
+                    g = self.by_id[("gates", ph["gate"])]
+                    out.append(
+                        f'<a class="step gate" data-tiers="{" ".join(g["tiers"])}" href="{rel(here, page_path(g["doc"]))}" '
+                        f'title="{esc(g["name"])}: approved by the Owner"><span class="diamond"><span>{esc(g["id"])}</span></span>'
+                        f'<span class="gate-name">{esc(g["name"])}</span></a>')
+                else:
+                    out.append('<span class="step arrow" aria-hidden="true">→</span>')
+            return out
+
+        setup = steps([ph for ph in p["phases"] if not ph.get("loop")])
+        loop = steps([ph for ph in p["phases"] if ph.get("loop")])
+        loop.pop()  # the loop's last phase connects back to its first
+        flow = (f'<div class="flow">{"".join(setup)}'
+                f'<div class="loop"><span class="loop-label">Increment loop: repeat for every increment</span>'
+                f'<div class="loop-steps">{"".join(loop)}</div>'
+                f'<span class="loop-back" aria-hidden="true">↻ back to {esc(p["phases"][1]["id"])} for the next increment</span>'
+                f'</div></div>')
 
         tier_cards = "".join(
             f'<div class="tier-card"><span class="badge tier-{t["id"]}">{t["id"]}</span> '
@@ -331,7 +346,7 @@ class Site:
 <h1>dev-process</h1>
 <p class="lead">{esc(p["process"]["summary"])}</p>
 
-<h2 id="flow">The flow</h2>
+<h2 id="flow">The loop</h2>
 <div class="tier-filter" role="group" aria-label="Show flow for tier">
   <span class="muted">Show for:</span>
   <button data-tier="all" aria-pressed="true">All</button>
@@ -339,9 +354,10 @@ class Site:
   <button data-tier="T2" aria-pressed="false">T2 Standard</button>
   <button data-tier="T3" aria-pressed="false">T3 Major</button>
 </div>
-<div class="flow">{''.join(flow)}</div>
+{flow}
 <p class="muted small">Phases are boxes; ◆ diamonds are human gates approved by the Owner.
-After P7, the next increment starts again at P1 (or P4 for T1 changes).</p>
+P0 runs once per initiative. Then every increment goes round the loop, and T1 changes enter at P2.
+See <a href="{rel(here, page_path("guides/increments.md"))}">Increments &amp; the loop</a>.</p>
 
 <h2 id="tiers">Risk tiers</h2>
 <div class="tiers">{tier_cards}</div>

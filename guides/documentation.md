@@ -16,10 +16,10 @@ the Definition of Done.
 1. **Same PR rule.** A change that makes a doc wrong updates that doc in the same PR.
 2. **Diagrams as text.** Use Mermaid or PlantUML, so agents can read and edit them.
 3. **Exact commands.** Operational and `AGENTS.md` instructions use copy-pasteable commands, which agents should actually run to check them.
-4. **No speculative docs.** Document what exists. Plans go in requirements, the plan or ADRs.
+4. **No speculative docs.** Document what exists. Plans go in requirements, increment briefs or ADRs.
 5. **English only.**
 
 ## Keeping docs honest
-- The Documenter agent checks docs against the actual behaviour (run the commands, open the UI) at P6.
+- The Documenter agent checks docs against the actual behaviour (run the commands, open the UI) at P4.
 - The Reviewer agent flags code changes with no matching doc change.
 - The conformance checker warns when required doc artefacts are missing for the tier, or when their frontmatter is invalid.

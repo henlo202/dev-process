@@ -1,6 +1,6 @@
 # PDR-0002: A single human Owner approves gates, supported by a Reviewer agent
 
-- **Status:** accepted
+- **Status:** accepted (gate numbers updated by [PDR-0006](PDR-0006-increment-loop.md): the cooling-off now applies to G1 for T3, and agent merges at A3 to G2 for T1)
 - **Date:** 2026-10-19
 
 ## Context

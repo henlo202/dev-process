@@ -13,3 +13,4 @@ meets its requirements.
 - Tests live in the folders listed under `test_paths` in `.process/config.yaml`.
 
 See the [QA guide](../guides/quality-assurance.md).
+- Spike code is never merged. Production code is rebuilt test-first, using what the spike taught.

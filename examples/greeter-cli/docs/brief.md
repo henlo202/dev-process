@@ -36,7 +36,11 @@ Python 3.9+, standard library only.
 **Tier:** T2. A new tool, but small, with no data, no network and no security
 surface. It is not T1, because it introduces a new user-facing interface.
 
-## 7. Open questions & assumptions
+## 7. First increments
+- INC-001: walking skeleton, greeting in English
+- INC-002: Swedish greeting and input validation
+
+## 8. Open questions & assumptions
 - Assumption: names are passed as one argument (quoted if they contain spaces).
 
 ## History

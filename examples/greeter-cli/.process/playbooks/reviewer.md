@@ -1,6 +1,6 @@
 # Playbook: Reviewer agent
 
-**When:** before every gate (G0–G5)
+**When:** before every gate (G0–G3)
 **Reads:** the artefact under review **and its inputs** (e.g. code vs requirements, design vs NFRs)
 **Writes:** a reviewer summary (template: `.process/templates/reviewer-summary.md`)
 
@@ -10,11 +10,9 @@ Run in a fresh session, separate from the one that produced the work, if your to
 | Gate | Focus |
 |------|-------|
 | G0 | Problem clarity, measurable success, non-goals, tier justification |
-| G1 | Ambiguity, testability, conflicts, missing NFRs, scope creep against the brief |
-| G2 | Requirements coverage, ADR quality (real alternatives?), operability, security threats, test strategy gaps |
-| G3 | Requirements with no task, oversized tasks, hidden dependencies, risky ordering |
-| G4 | Correctness, tests that actually prove the ACs, weakened or deleted tests, security, docs updated, design adherence, tier still correct |
-| G5 | Version, changelog accuracy, rollback path, migrations, user docs vs behaviour |
+| G1 | One clear outcome; size limit; testable ACs; missing NFRs; open questions that should have been spiked; scope creep against the brief. **T3:** ADR quality (real alternatives, spike evidence?), operability, security threats, test strategy gaps |
+| G2 | Does the demo actually show every AC in scope? Correctness; tests that really prove the ACs; weakened or deleted tests; spike code leaking in; security; docs updated; tier still correct |
+| G3 | Version, changelog accuracy, rollback path, migrations, user docs vs behaviour |
 
 ## Rules
 - Rank each finding as blocker, major, minor or nit.

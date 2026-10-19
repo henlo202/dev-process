@@ -13,7 +13,7 @@ A command-line tool with no runtime service and no dependencies beyond Python 3.
 ## 2. Deploy (release)
 ```bash
 python -m unittest discover -s tests
-git tag -a v0.1.0 -m "Release v0.1.0 (G5 checklist in tag message)"
+git tag -a v0.1.0 -m "Release v0.1.0 (G3 checklist in tag message)"
 git push origin v0.1.0
 ```
 

@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Where to put the first file when an artefact's path is a folder.
 FOLDER_SEEDS = {
+    "increment": "INC-001-walking-skeleton.md",
     "requirements": "core.md",
     "user-docs": "index.md",
 }
@@ -87,7 +88,7 @@ def adopt(project: Path, name: str, tier: str, github: bool) -> None:
         path, template = art.get("path"), art.get("template")
         if not path:
             continue
-        if tier not in art["required_tiers"] and art["id"] not in ("adr", "gate-record"):
+        if tier not in art["required_tiers"] and art["id"] not in ("adr", "gate-record", "spike-report"):
             continue
         target = project / path
         if path.endswith("/"):

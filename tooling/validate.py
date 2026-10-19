@@ -61,7 +61,7 @@ def main() -> int:
                 errors.append(f"gate {g['id']}: phase {g['after']} does not point back to it")
         if g["approver"] not in ids["roles"]:
             errors.append(f"gate {g['id']}: unknown approver {g['approver']}")
-        for a in g["evidence"]:
+        for a in g["evidence"] + [x for xs in (g.get("tier_evidence") or {}).values() for x in xs]:
             if a not in ids["artefacts"]:
                 errors.append(f"gate {g['id']}: unknown evidence artefact {a}")
     for a in process["artefacts"]:

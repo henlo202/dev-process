@@ -7,7 +7,9 @@
 4. **Approved requirements change only through versioning**, never silently.
 
 ## Lifecycle
-`draft` → `approved` (at G1) → (changed: new version, re-approved at the next G1 or G4) → `retired`
+`draft` → `approved` (at the G1 of the increment that brings it into scope) → (changed: new version, re-approved at the next G1, or at G2 for small changes) → `retired`
+
+Only requirements for the **next increment** need to be detailed. Everything further out can stay as one-line backlog items in the brief, until an increment pulls it in.
 
 ## Traceability
 Traceability is maintained by convention, so no tool is needed:
@@ -15,7 +17,7 @@ Traceability is maintained by convention, so no tool is needed:
 | Link | How |
 |------|-----|
 | Requirement → brief | `Source:` field in the requirement |
-| Task → requirement | `Requirements:` field in the task |
+| Increment → requirement | `requirements:` list in the increment brief's frontmatter |
 | Test → requirement | Requirement ID in the test name or a comment (`REQ-007`, `test_REQ_007_...`) |
 | Commit/PR → requirement | Requirement ID in the PR description |
 | Release → requirement | Changelog entries mention IDs where useful |
@@ -33,4 +35,4 @@ references to IDs that do not exist.
 1. Update the requirement and bump the file's version, with a change-log entry.
 2. Set its status back to `draft` if the change is material.
 3. Update the affected tests and tasks.
-4. Re-approve: at the next G1, or explicitly in the G4 checklist for small changes.
+4. Re-approve: at the next G1, or explicitly in the G2 checklist for small changes.
