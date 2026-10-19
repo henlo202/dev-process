@@ -19,7 +19,9 @@ import argparse
 import datetime as dt
 import fnmatch
 import glob
+import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -350,6 +352,37 @@ def check_gates(root: Path, tier: str, increments: list[dict], report: Report):
             )
 
 
+def check_guardrails(root: Path, config: dict, tier: str, report: Report):
+    g = config.get("guardrails")
+    if g is None:
+        report.add("guardrails-not-configured", WARNING,
+                   "`.process/config.yaml` has no `guardrails` section.",
+                   "Run `scaffold.py --upgrade` to add it, then set `mode` and `lint_command`.",
+                   "guides/guardrails.md")
+        return
+    if tier != "T1" and not (g.get("lint_command") or "").strip():
+        report.add("lint-not-configured", WARNING,
+                   "No `guardrails.lint_command` is set, so the coding standard is not enforced by tooling.",
+                   "Configure a linter/formatter for the project and put its check command in `guardrails.lint_command`.",
+                   "guides/guardrails.md")
+    if g.get("mode", "warn") != "block":
+        report.add("guardrails-warn-mode", INFO,
+                   "Guardrails are in `warn` mode: hooks and CI report violations but do not refuse them.",
+                   "Set `guardrails.mode: block` once the rules fit the project.",
+                   "guides/guardrails.md")
+    if (root / ".git").exists() and not os.environ.get("CI"):
+        try:
+            out = subprocess.run(["git", "-C", str(root), "config", "core.hooksPath"],
+                                 capture_output=True, text=True).stdout.strip()
+        except OSError:
+            out = ""
+        if out.rstrip("/") != ".process/guardrails/git-hooks":
+            report.add("hooks-not-installed", INFO,
+                       "Guardrail git hooks are not installed in this clone.",
+                       "Run `git config core.hooksPath .process/guardrails/git-hooks`.",
+                       "guides/guardrails.md")
+
+
 def apply_waivers(config: dict, report: Report, today: dt.date):
     for w in config.get("waivers") or []:
         if not isinstance(w, dict) or not w.get("rule"):
@@ -461,6 +494,7 @@ def main(argv=None) -> int:
     increments = load_increments(root)
     check_increments(increments, reqs, config, report)
     check_gates(root, tier, increments, report)
+    check_guardrails(root, config, tier, report)
     apply_waivers(config, report, dt.date.today())
 
     text = render(report, config.get("project", root.name), tier,

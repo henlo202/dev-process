@@ -1,4 +1,6 @@
-# dev-process conformance check (warn-only). Added by scaffold.py --github.
+# dev-process checks. Added by scaffold.py --github.
+#  - process-check: conformance + traceability report (warn-only, never fails)
+#  - guardrails:    lint/format + commit messages (fails in guardrails mode "block")
 name: process-check
 on:
   pull_request:
@@ -19,3 +21,15 @@ jobs:
         with:
           name: process-report
           path: process-report.md
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Install whatever your guardrails.lint_command needs here, e.g.: pip install ruff
+      - name: Guardrails (lint + commit messages)
+        run: sh .process/guardrails/ci-guardrails.sh ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}

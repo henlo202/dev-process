@@ -17,7 +17,9 @@ python tooling/scaffold.py examples/greeter-cli --name greeter-cli --tier T2
 | `docs/requirements/core.md` | REQ/NFR IDs and Given/When/Then acceptance criteria |
 | `tests/test_cli.py` | Tests named after requirement IDs (`test_REQ_001_...`) |
 | `docs/gates/` | Gate records for G0, and for G1 of each increment |
-| `.process/config.yaml` | A waiver with a reason and an expiry date |
+| `docs/standards.md` | Engineering standards, each naming its enforcement |
+| `.process/config.yaml` | Guardrails in `block` mode with a ruff lint command, and a waiver with a reason and an expiry date |
+| `CLAUDE.md`, `.claude/` | The Claude Code adapter: skills plus a hook that refuses bypasses and merges |
 | `python .process/check.py` | A clean conformance and traceability report |
 
 ```bash

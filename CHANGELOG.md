@@ -7,6 +7,30 @@ All notable changes to dev-process are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-19
+Agent instructions are now **skills**, and rules can be **enforced** by guardrails ([PDR-0007](governance/decisions/PDR-0007-skills-and-guardrails.md)).
+
+### Added
+- **Skills** in Agent Skills format (`agents/skills/<name>/SKILL.md`): role skills for the analyst, architect, planner, implementer, tester, reviewer and documenter; task skills for shaping an increment, spikes, demos and the conformance check. Declared in `process.yaml` (`skills:`) with bundled templates, and validated by `validate.py`.
+- **Engineering standards** artefact (`docs/standards.md`, required for T2/T3): each rule, with where it is enforced.
+- **Guardrails** (`tooling/guardrails/` → `.process/guardrails/`): `guard.py` with `commit-msg`, `pre-commit` and `pre-push` git hooks (no commits or pushes to protected branches, branch naming, commit convention, lint command) and a CI script. Configured in the `guardrails` section of `.process/config.yaml`; `mode: warn` by default, `block` opt-in.
+- **Claude Code adapter** (`adapters/claude/`, `scaffold.py --adapter claude`): `CLAUDE.md` importing `AGENTS.md`, skills in `.claude/skills/`, and a `PreToolUse` hook refusing bypasses (`--no-verify`, `core.hooksPath`, the Owner override), PR merges or approvals, pushes to protected branches and project-blocked commands.
+- Guide: [Guardrails](guides/guardrails.md).
+- Checker rules: `guardrails-not-configured`, `lint-not-configured`, `guardrails-warn-mode` (info), `hooks-not-installed` (info).
+- Scaffolder options: `--guardrails warn|block`, `--adapter claude`, `--install-hooks`. The GitHub workflow template gains a `guardrails` job.
+
+### Changed
+- `.process/playbooks/` is replaced by `.process/skills/`.
+- The `AGENTS.md` template has a setup step for hooks, a link to the standards, and the bypass ban.
+- Agent autonomy: bypassing a guardrail is on the "never" list at every level.
+
+### Upgrade (from 0.2.0)
+1. Run `python <dev-process>/tooling/scaffold.py <project> --upgrade --install-hooks` (add `--adapter claude` if you use Claude Code). This replaces `.process/playbooks/` with `.process/skills/` and adds a `guardrails` section (mode `warn`) to `.process/config.yaml`.
+2. Create `docs/standards.md` from `.process/templates/standards.md`.
+3. Set `guardrails.lint_command`, then switch to `mode: block` when ready.
+4. Update `AGENTS.md` from `.process/templates/AGENTS.md` (Setup, Process and Rules sections).
+5. If you use `--github`, add the `guardrails` job from `tooling/ci/github-actions-process-check.yml` to your workflow.
+
 ## [0.2.0] - 2026-10-19
 The process is now a **loop of small increments** instead of a sequence of phases ([PDR-0006](governance/decisions/PDR-0006-increment-loop.md)).
 

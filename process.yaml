@@ -5,7 +5,7 @@
 
 process:
   name: dev-process
-  version: 0.2.0
+  version: 0.3.0
   language: en
   owner: Owner
   summary: >
@@ -80,7 +80,7 @@ phases:
     tiers: [T1, T2, T3]
     roles: [owner, analyst, architect]
     inputs: []
-    outputs: [brief, agents-context, process-config, architecture, test-strategy]
+    outputs: [brief, agents-context, process-config, standards, architecture, test-strategy]
     gate: G0
   - id: P1
     name: Shape
@@ -97,7 +97,7 @@ phases:
     loop: true
     tiers: [T1, T2, T3]
     roles: [implementer, tester, documenter]
-    inputs: [increment, requirements, architecture, test-strategy, agents-context]
+    inputs: [increment, requirements, architecture, test-strategy, standards, agents-context]
     outputs: [code, tests, user-docs, changelog]
     gate: null
   - id: P3
@@ -190,6 +190,14 @@ artefacts:
     scope: initiative
     owner: owner
     required_tiers: [T1, T2, T3]
+  - id: standards
+    name: Engineering standards
+    doc: artefacts/standards.md
+    template: artefacts/templates/standards.md
+    path: docs/standards.md
+    scope: initiative
+    owner: owner
+    required_tiers: [T2, T3]
   - id: requirements
     name: Requirements specification
     doc: artefacts/requirements.md
@@ -343,9 +351,26 @@ artefacts:
     owner: owner
     required_tiers: []
 
+# Agent skills (Agent Skills format: <dir>/SKILL.md with name + description).
+# kind: role = one per agent role; task = a job the Owner asks for directly.
+# bundle: templates copied into the skill folder when installed in a project.
+skills:
+  - {id: dev-process-analyst, kind: role, role: analyst, doc: agents/skills/dev-process-analyst/SKILL.md, phases: [P0, P1], bundle: [artefacts/templates/requirements.md]}
+  - {id: dev-process-architect, kind: role, role: architect, doc: agents/skills/dev-process-architect/SKILL.md, phases: [P0, P1], bundle: [artefacts/templates/adr.md]}
+  - {id: dev-process-planner, kind: role, role: planner, doc: agents/skills/dev-process-planner/SKILL.md, phases: [P0, P1], bundle: [artefacts/templates/increment.md]}
+  - {id: dev-process-implementer, kind: role, role: implementer, doc: agents/skills/dev-process-implementer/SKILL.md, phases: [P2, P3], bundle: [artefacts/templates/pull-request.md]}
+  - {id: dev-process-tester, kind: role, role: tester, doc: agents/skills/dev-process-tester/SKILL.md, phases: [P2, P3], bundle: []}
+  - {id: dev-process-reviewer, kind: role, role: reviewer, doc: agents/skills/dev-process-reviewer/SKILL.md, phases: [P0, P1, P3, P4], bundle: [artefacts/templates/reviewer-summary.md]}
+  - {id: dev-process-documenter, kind: role, role: documenter, doc: agents/skills/dev-process-documenter/SKILL.md, phases: [P2, P4, P5], bundle: []}
+  - {id: dev-process-shape-increment, kind: task, role: null, doc: agents/skills/dev-process-shape-increment/SKILL.md, phases: [P1], bundle: [artefacts/templates/increment.md]}
+  - {id: dev-process-spike, kind: task, role: null, doc: agents/skills/dev-process-spike/SKILL.md, phases: [P0, P1, P2], bundle: [artefacts/templates/spike-report.md]}
+  - {id: dev-process-demo, kind: task, role: null, doc: agents/skills/dev-process-demo/SKILL.md, phases: [P3], bundle: []}
+  - {id: dev-process-conformance-check, kind: task, role: null, doc: agents/skills/dev-process-conformance-check/SKILL.md, phases: [P1, P3, P4], bundle: []}
+
 guides:
   - {id: increments, name: Increments & the loop, doc: guides/increments.md}
   - {id: spikes, name: Spikes (build to learn), doc: guides/spikes.md}
+  - {id: guardrails, name: Guardrails (enforcement), doc: guides/guardrails.md}
   - {id: risk-tiers, name: Risk tiers, doc: guides/risk-tiers.md}
   - {id: requirements-guide, name: Requirements handling, doc: guides/requirements.md}
   - {id: quality-assurance, name: Quality assurance & testing, doc: guides/quality-assurance.md}

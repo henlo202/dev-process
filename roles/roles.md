@@ -26,6 +26,9 @@ own homework.
 | **Reviewer** | before every gate | Reviewer summaries | Soften findings; review in the same session that did the work |
 | **Documenter** | P2, P4, P5 | User docs, runbook, changelog, release notes | Document behaviour that is not implemented |
 
+Each agent role has a matching skill, `dev-process-<role>` (see [agent skills](../agents/README.md)),
+which any agent can load to play that role.
+
 ## Who decides what
 
 | Decision | Owner | Agents |

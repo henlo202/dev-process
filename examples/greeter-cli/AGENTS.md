@@ -12,8 +12,8 @@ AI-agentic development. The current tier is **T2**.
 
 - Process configuration: `.process/config.yaml`
 - Conformance check: `python .process/check.py` (it warns and never blocks)
-- Role playbooks: `.process/playbooks/` (analyst, architect, planner,
-  implementer, tester, reviewer, documenter)
+- Skills: `.process/skills/` (one folder per role or task, each with a `SKILL.md`).
+  Use the matching skill for each task, e.g. `dev-process-implementer` for coding.
 - Artefact templates: `.process/templates/`
 - Work happens in small **increments** (`docs/increments/`), each looping
   through P1 Shape → P2 Build → P3 Verify → P4 Release → P5 Learn. Before
@@ -24,11 +24,18 @@ AI-agentic development. The current tier is **T2**.
 - Human gates (G0–G3) are approved only by the Owner. **Never** approve a
   gate, merge a pull request or deploy on your own.
 
+## Setup (run once in every clone)
+```bash
+git config core.hooksPath .process/guardrails/git-hooks   # install guardrails
+pip install ruff                                          # dev-only lint/format tool
+```
+
 ## Commands
 ```bash
 # install: nothing (standard library only)
 python -m unittest discover -s tests           # test
 PYTHONPATH=src python -m greeter Ada --lang sv # run
+ruff check src tests && ruff format --check src tests   # lint/format (enforced by hooks + CI)
 python .process/check.py                       # process conformance (warn-only)
 ```
 
@@ -41,6 +48,7 @@ python .process/check.py                       # process conformance (warn-only)
 | `docs/spikes/` | Spike reports |
 | `docs/architecture.md` | Architecture |
 | `docs/adr/` | Architecture decision records |
+| `docs/standards.md` | Engineering standards, and how each rule is enforced |
 | `docs/test-strategy.md` | Test strategy |
 | `docs/ops/runbook.md` | Runbook |
 | `docs/user/` | User documentation (Diátaxis) |
@@ -55,9 +63,13 @@ settings; changing an approved requirement or an accepted ADR; deleting or
 weakening tests.
 
 Never: merge, approve gates, deploy to production, handle real secrets or
-personal data, force-push to the main branch.
+personal data, push or force-push to `main`, bypass a guardrail (`--no-verify`,
+changing `core.hooksPath`, `DEV_PROCESS_OWNER_OVERRIDE`).
 
 ## Rules
+- Follow `docs/standards.md`. Run the lint command before every commit, and work
+  only on feature branches. Git hooks enforce this: if one refuses, fix the
+  cause, never bypass it.
 - Write tests first, and reference requirement IDs in test names or comments.
 - Update the relevant docs and `CHANGELOG.md` (Unreleased) in the same change.
 - All artefacts are written in English.

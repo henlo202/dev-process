@@ -9,6 +9,7 @@
     "phases",
     "gates",
     "artefacts",
+    "skills",
     "guides",
     "governance"
   ],
@@ -337,6 +338,62 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/docEntry"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "role",
+          "doc",
+          "phases",
+          "bundle"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,64}$"
+          },
+          "kind": {
+            "enum": [
+              "role",
+              "task"
+            ]
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "doc": {
+            "type": "string",
+            "pattern": "^agents/skills/[a-z0-9-]+/SKILL\\.md$"
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^P\\d$"
+            },
+            "uniqueItems": true
+          },
+          "bundle": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
       }
     }
   }
