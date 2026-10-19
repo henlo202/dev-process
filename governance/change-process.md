@@ -30,5 +30,5 @@ Typos and clarifications need no PDR.
 ## Signals that the process needs to change
 - The same waiver appears in several projects, so the rule is probably wrong.
 - A gate is regularly approved without reading, so it is too heavy or in the wrong place.
-- Agents repeatedly misunderstand a step, so the playbook is unclear.
+- Agents repeatedly misunderstand a step, so the skill is unclear.
 - A retrospective action is routed to "process change".

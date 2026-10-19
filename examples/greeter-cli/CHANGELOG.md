@@ -9,4 +9,4 @@ and this project uses [Semantic Versioning](https://semver.org/).
 - `greet NAME` prints "Hello, NAME!" (REQ-001).
 - `--lang sv` prints the greeting in Swedish (REQ-002).
 - An empty name is rejected with exit code 2 (REQ-003).
-- Project scaffolded with dev-process v0.1.0.
+- Project scaffolded with dev-process v0.1.0, and upgraded to v0.3.0 (skills, guardrails).

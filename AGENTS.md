@@ -8,6 +8,7 @@ follows it in the normal way. Changes here follow
 ```bash
 pip install -r requirements.txt
 python tooling/validate.py        # must pass before every commit
+python -m unittest discover -s tooling/tests   # guardrail tests (real temp git repos)
 python site/build.py              # builds _site/; open _site/index.html
 python tooling/scaffold.py /tmp/x --tier T3 && python /tmp/x/.process/check.py --project /tmp/x   # smoke test
 python examples/greeter-cli/.process/check.py --project examples/greeter-cli

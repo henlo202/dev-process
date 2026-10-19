@@ -1,0 +1,3 @@
+#!/bin/sh
+# dev-process guardrail (installed via: git config core.hooksPath .process/guardrails/git-hooks)
+exec python3 "$(git rev-parse --show-toplevel)/.process/guardrails/guard.py" commit-msg "$@"

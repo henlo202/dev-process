@@ -16,15 +16,22 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Validate process structure, links and version
         run: python tooling/validate.py
+      - name: Guardrail tests (real git repos)
+        run: |
+          git config --global user.name ci && git config --global user.email ci@example.com
+          python -m unittest discover -s tooling/tests -v
       - name: Smoke-test scaffolder and checker
         run: |
-          python tooling/scaffold.py "$RUNNER_TEMP/demo" --name demo --tier T3 --github
+          python tooling/scaffold.py "$RUNNER_TEMP/demo" --name demo --tier T3 --github --adapter claude --guardrails block
           python "$RUNNER_TEMP/demo/.process/check.py" --project "$RUNNER_TEMP/demo"
       - name: Worked example tests and conformance
         working-directory: examples/greeter-cli
         run: |
           python -m unittest discover -s tests
           diff -q ../../tooling/check.py .process/check.py
+          diff -q ../../tooling/guardrails/guard.py .process/guardrails/guard.py
+          pip install ruff
+          python .process/guardrails/guard.py ci
           python .process/check.py | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Build site
         run: python site/build.py

@@ -1,5 +1,5 @@
 # Links this project to dev-process. Read by .process/check.py and by agents.
-process_version: "0.2.0"
+process_version: "0.3.0"
 project: "greeter-cli"
 tier: T2            # T1 | T2 | T3: highest tier of work currently expected
 test_paths:               # where to look for requirement IDs referenced by tests
@@ -7,6 +7,13 @@ test_paths:               # where to look for requirement IDs referenced by test
 increment_limits:         # size limit per increment (warn only)
   max_requirements: 5
   max_slices: 8
+guardrails:               # hard enforcement; see dev-process guides/guardrails.md
+  mode: block               # block | warn
+  protected_branches: [main, master]
+  branch_pattern: '^(task|fix|spike|docs|chore|release)/[A-Za-z0-9._/-]+$'
+  commit_pattern: '^(feat|fix|docs|test|refactor|perf|build|ci|chore|style|revert|spike)(\([^)]+\))?!?: .+'
+  lint_command: "ruff check src tests && ruff format --check src tests"
+  agent_blocked_commands: []   # regexes agent adapters refuse, e.g. deploy commands
 waivers:
   - rule: untested-requirement:REQ-004
     reason: AC-004.1 (plain-language help text) is subjective and checked manually at G2.
@@ -15,3 +22,4 @@ waivers:
 #   - rule: artefact-missing:runbook       # rule id as printed by the checker
 #     reason: CLI tool with no runtime; release procedure is in CONTRIBUTING.md
 #     expires: 2027-06-30
+adapters: [claude]   # agent-tool integrations, refreshed on upgrade

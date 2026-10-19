@@ -59,7 +59,7 @@ class Site:
             for e in self.p[kind]:
                 self.by_id[(kind, e["id"])] = e
         self.decisions = sorted((ROOT / "governance" / "decisions").glob("*.md"))
-        self.playbooks = sorted((ROOT / "agents" / "playbooks").glob("*.md"))
+        self.skills = self.p["skills"]
         self.templates = sorted(p for p in (ROOT / "artefacts" / "templates").iterdir() if p.is_file())
         self.md = markdown.Markdown(extensions=["tables", "fenced_code", "toc", "sane_lists", "attr_list"])
 
@@ -179,6 +179,21 @@ class Site:
             out.append(self.panel(rows, title))
         return "".join(out), ""
 
+    def skill_panel(self, sk, here):
+        text = (ROOT / sk["doc"]).read_text(encoding="utf-8")
+        fm = yaml.safe_load(text.split("\n---", 1)[0].lstrip("-")) or {}
+        bundle = ", ".join(f'<a href="{rel(here, page_path(b))}">{esc(Path(b).name)}</a>' for b in sk["bundle"])
+        rows = [
+            ("Skill name", f"<code>{esc(fm.get('name', sk['id']))}</code>"),
+            ("Use when", esc(fm.get("description", ""))),
+            ("Kind", "role skill" if sk["kind"] == "role" else "task skill"),
+            ("Role", self.link(here, "roles", sk["role"]) if sk["role"] else '<span class="muted">any</span>'),
+            ("Phases", self.links(here, "phases", sk["phases"])),
+            ("Bundled", bundle or '<span class="muted">—</span>'),
+            ("In a project", f"<code>.process/skills/{esc(sk['id'])}/SKILL.md</code>"),
+        ]
+        return self.panel(rows)
+
     @staticmethod
     def panel(rows, title=""):
         cells = "".join(f"<dt>{esc(k)}</dt><dd>{v}</dd>" for k, v in rows)
@@ -203,9 +218,9 @@ class Site:
             section("Gates", [item(page_path(x["doc"]), x["name"], x["id"]) for x in p["gates"]]),
             section("Artefacts", [item(page_path(d), n) for d, n in self.artefact_docs()], False),
             section("Roles & agents", [item(page_path("roles/roles.md"), "Roles"),
-                                       item(page_path("agents/README.md"), "Agent playbooks")]
-                    + [item(page_path(f"agents/playbooks/{pb.name}"), pb.stem.capitalize(), "▸")
-                       for pb in self.playbooks], False),
+                                       item(page_path("agents/README.md"), "Agent skills")]
+                    + [item(page_path(sk["doc"]), sk["id"].removeprefix("dev-process-"), "▸")
+                       for sk in self.skills], False),
             section("Guides", [item(page_path(x["doc"]), x["name"]) for x in p["guides"]], False),
             section("Governance", [item(page_path(x["doc"]), x["name"]) for x in p["governance"]]
                     + [item(page_path(f"governance/decisions/{d.name}"), self.title_of(d).split(":")[0], "▸")
@@ -341,6 +356,10 @@ class Site:
 
         guides = "".join(f'<li>{self.link(here, "guides", g["id"])}</li>' for g in p["guides"])
         gov = "".join(f'<li>{self.link(here, "governance", g["id"])}</li>' for g in p["governance"])
+        skills = "".join(
+            f'<li><a href="{rel(here, page_path(sk["doc"]))}"><code>{esc(sk["id"])}</code></a>'
+            f' <span class="muted small">{"role" if sk["kind"] == "role" else "task"}</span></li>'
+            for sk in self.skills)
 
         body = f"""
 <h1>dev-process</h1>
@@ -377,11 +396,13 @@ See <a href="{rel(here, page_path("guides/increments.md"))}">Increments &amp; th
 <div class="cols">
 <section><h2 id="guides">Guides</h2><ul>{guides}</ul></section>
 <section><h2 id="governance">Governance</h2><ul>{gov}</ul></section>
+<section><h2 id="skills">Agent skills</h2><ul>{skills}</ul></section>
 </div>
 
 <h2 id="tooling">Tooling</h2>
 <pre><code># adopt in a project (never overwrites existing files)
-python tooling/scaffold.py ../my-project --name "My project" --tier T2 --github
+python tooling/scaffold.py ../my-project --name "My project" --tier T2 \
+    --guardrails block --adapter claude --github --install-hooks
 # check conformance (warns, never blocks)
 python .process/check.py
 # upgrade a project to a newer process version
@@ -419,7 +440,10 @@ python tooling/scaffold.py ../my-project --upgrade</code></pre>
                 self.doc_page(e["doc"])
         self.doc_page("roles/roles.md")
         self.doc_page("agents/README.md")
-        for f in self.playbooks + self.decisions:
+        for sk in self.skills:
+            here = page_path(sk["doc"])
+            self.doc_page(sk["doc"], self.skill_panel(sk, here))
+        for f in self.decisions:
             self.doc_page(f.relative_to(ROOT).as_posix())
         for t in self.templates:
             self.template_page(t)

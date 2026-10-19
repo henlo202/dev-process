@@ -23,7 +23,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
-CONTENT_DIRS = ["phases", "gates", "artefacts", "roles", "guides", "governance", "agents"]
+CONTENT_DIRS = ["phases", "gates", "artefacts", "roles", "guides", "governance", "agents", "adapters"]
 
 
 def main() -> int:
@@ -70,8 +70,10 @@ def main() -> int:
         if a["template"] and not (ROOT / a["template"]).is_file():
             errors.append(f"artefact {a['id']}: template {a['template']} not found")
 
+    errors += validate_skills(process, ids)
+
     referenced = set()
-    for kind in ("tiers", "roles", "phases", "gates", "artefacts", "guides", "governance"):
+    for kind in ("tiers", "roles", "phases", "gates", "artefacts", "guides", "governance", "skills"):
         for e in process[kind]:
             if not (ROOT / e["doc"]).is_file():
                 errors.append(f"{kind} {e['id']}: doc {e['doc']} not found")
@@ -81,7 +83,7 @@ def main() -> int:
     md_files += [ROOT / "README.md", ROOT / "CHANGELOG.md"]
     for p in md_files:
         rel = p.relative_to(ROOT).as_posix()
-        in_auto_dir = rel.startswith(("artefacts/templates/", "agents/", "governance/decisions/"))
+        in_auto_dir = rel.startswith(("artefacts/templates/", "agents/README.md", "governance/decisions/", "adapters/"))
         if rel not in referenced and not in_auto_dir and p.parent != ROOT:
             errors.append(f"orphan document (not in process.yaml): {rel}")
         if rel.startswith("artefacts/templates/"):
@@ -99,6 +101,45 @@ def main() -> int:
         errors.append(f"CHANGELOG.md latest release {m.group(1) if m else 'none'} "
                       f"!= process.yaml version {process['process']['version']}")
     return report(errors)
+
+
+def validate_skills(process: dict, ids: dict) -> list[str]:
+    """Check SKILL.md files against the Agent Skills format and process.yaml."""
+    errors = []
+    covered_roles = set()
+    for sk in process["skills"]:
+        path = ROOT / sk["doc"]
+        if not path.is_file():
+            continue  # reported as a missing doc
+        text = path.read_text(encoding="utf-8")
+        m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+        fm = yaml.safe_load(m.group(1)) if m else None
+        if not isinstance(fm, dict):
+            errors.append(f"skill {sk['id']}: SKILL.md has no YAML frontmatter")
+            continue
+        if fm.get("name") != sk["id"] or path.parent.name != sk["id"]:
+            errors.append(f"skill {sk['id']}: frontmatter name and folder must both equal the skill id")
+        if not re.match(r"^[a-z0-9-]{1,64}$", str(fm.get("name", ""))):
+            errors.append(f"skill {sk['id']}: name must be 1-64 lowercase letters, digits or hyphens")
+        desc = str(fm.get("description", "")).strip()
+        if not desc or len(desc) > 1024:
+            errors.append(f"skill {sk['id']}: description must be 1-1024 characters (is {len(desc)})")
+        elif not re.search(r"\buse (when|for|before|after|on)\b", desc, re.IGNORECASE):
+            errors.append(f"skill {sk['id']}: description should say when to use it (\"Use when/for/before ...\")")
+        if sk["role"] is not None:
+            if sk["role"] not in ids["roles"]:
+                errors.append(f"skill {sk['id']}: unknown role {sk['role']}")
+            covered_roles.add(sk["role"])
+        for ph in sk["phases"]:
+            if ph not in ids["phases"]:
+                errors.append(f"skill {sk['id']}: unknown phase {ph}")
+        for b in sk["bundle"]:
+            if not (ROOT / b).is_file():
+                errors.append(f"skill {sk['id']}: bundled file {b} not found")
+    for role in process["roles"]:
+        if role["kind"] == "agent" and role["id"] not in covered_roles:
+            errors.append(f"agent role {role['id']} has no role skill")
+    return errors
 
 
 def report(errors: list[str]) -> int:

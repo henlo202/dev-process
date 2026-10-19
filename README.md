@@ -22,6 +22,7 @@ P0 Initiate ─G0─►  ┌─► P1 Shape ─G1─► P2 Build ─► P3 Verif
 - **Shape, don't specify:** detail only the next increment, and settle open questions with throwaway [spikes](guides/spikes.md) rather than long documents.
 - **Gate on outcomes:** the Owner approves merges after watching a [demo](artefacts/demo.md) of the increment working, backed by automated tests.
 - **Stay small:** a [size limit](guides/increments.md#size-limit) per increment, checked automatically.
+- **Enforce what matters:** coding standards, branching and "never" rules are enforced by [guardrails](guides/guardrails.md), not just written down.
 - **Scale by risk:** T1 Trivial changes skip shaping, and T3 Major increments add design scrutiny at G1. See [risk tiers](guides/risk-tiers.md).
 
 | Folder | Contents |
@@ -30,10 +31,11 @@ P0 Initiate ─G0─►  ┌─► P1 Shape ─G1─► P2 Build ─► P3 Verif
 | [`gates/`](gates/) | G0–G3: human approval checklists |
 | [`artefacts/`](artefacts/) | The standard artefacts, plus [`templates/`](artefacts/templates/) |
 | [`roles/`](roles/roles.md) | The Owner and the agent roles |
-| [`agents/`](agents/README.md) | Tool-neutral playbooks for each agent role |
+| [`agents/`](agents/README.md) | Agent **skills** (`SKILL.md` format): one per role, plus task skills |
+| [`adapters/`](adapters/claude/README.md) | Optional agent-tool integrations (Claude Code) |
 | [`guides/`](guides/) | Increments, spikes, requirements, QA, documentation, security, tiers, autonomy, glossary |
 | [`governance/`](governance/ownership.md) | How the process itself is owned, changed, versioned and adopted |
-| [`tooling/`](tooling/) | `scaffold.py`, `check.py` (conformance), `validate.py`, CI snippets |
+| [`tooling/`](tooling/) | `scaffold.py`, `check.py` (conformance), `guardrails/` (enforcement), `validate.py`, CI snippets |
 | [`site/`](site/) | HTML site generator |
 | [`examples/`](examples/) | A worked example project |
 
@@ -42,8 +44,9 @@ P0 Initiate ─G0─►  ┌─► P1 Shape ─G1─► P2 Build ─► P3 Verif
 ```bash
 pip install -r requirements.txt
 
-# Adopt the process in a project
-python tooling/scaffold.py ../my-project --name "My project" --tier T2 --github
+# Adopt the process in a project (with blocking guardrails and Claude Code integration)
+python tooling/scaffold.py ../my-project --name "My project" --tier T2 \
+    --guardrails block --adapter claude --github --install-hooks
 cd ../my-project && python .process/check.py
 
 # Work on the process itself
@@ -52,8 +55,11 @@ python site/build.py            # build the HTML site into _site/
 ```
 
 ## Using it with agents
-Point any agent at the project's `AGENTS.md`. It links to the role playbooks in
-`.process/playbooks/`. See [agents/README.md](agents/README.md).
+Point any agent at the project's `AGENTS.md`. Agent instructions are **skills**
+in `.process/skills/`, which tools that support the format discover
+automatically. Rules that must hold are enforced by **guardrails** (git hooks,
+CI, optional agent-tool hooks) rather than left to instructions. See
+[agents/README.md](agents/README.md) and [guides/guardrails.md](guides/guardrails.md).
 
 ## Governance
 The Owner owns and approves all changes. Changes follow the
