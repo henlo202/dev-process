@@ -17,6 +17,9 @@ A3 is the only level where an agent may close a gate (G2 for T1). Use it only
 when the test suite is trustworthy. The Owner still reviews merged T1 changes
 afterwards, at release (G3).
 
+## Recording decisions
+At every level, an agent may **record** a gate decision that the Owner has explicitly stated, quoting it verbatim (`.process/status.py record-gate`). Recording is not approving. See [PDR-0008](../governance/decisions/PDR-0008-orchestration.md).
+
 ## Enforcement
 Autonomy levels are guidance in `AGENTS.md`. The "never" list is also enforced
 by [guardrails](guardrails.md) where possible: git hooks block pushes to protected branches, and

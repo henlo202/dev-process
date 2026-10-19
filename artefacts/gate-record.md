@@ -13,3 +13,4 @@ gives you an audit trail if compliance requirements arrive later.
 - Reference the exact versions (or commit) of the artefacts you reviewed.
 - Write the conditions so that they can be checked.
 - Never edit a gate record after the decision. Add a new one instead.
+- Records written by an agent (`recorded_by: agent`) must quote the Owner's decision verbatim in `owner_statement`. Agents use `.process/status.py record-gate`, and never record a decision the Owner did not state.

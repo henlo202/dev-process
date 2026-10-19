@@ -7,6 +7,31 @@ All notable changes to dev-process are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-19
+The process now **runs itself between gates** ([PDR-0008](governance/decisions/PDR-0008-orchestration.md)). In daily use the Owner states outcomes and makes gate decisions; an orchestrator does everything in between.
+
+### Added
+- **`status.py`** (`.process/status.py`): derives the current phase and next step from the repository alone (gate records, increment status and ticked slices, `docs/reviews/`, `CHANGELOG.md`, git branches and tags). It has `--json` output for agents, and `--fetch` to see merges.
+- **`status.py record-gate`**: records an Owner decision stated in conversation, verbatim (`recorded_by: agent`, `owner_statement`). It refuses unless that gate is pending. It sets the increment's status after G1.
+- **Orchestrator** role and skill (`dev-process-orchestrator`): loops on `status.py`, delegates each step to the right skill or subagent, sends reviews to a fresh context, and stops only at gates with a decision brief.
+- **Claude Code subagents**: `--adapter claude` now also creates `.claude/agents/dev-process-<role>.md` for each role.
+- Guide: [Running the process day to day](guides/orchestration.md).
+- Reviewer summaries for G0, G1 and G3 are stored in `docs/reviews/`; the template gains frontmatter.
+- Gate-record frontmatter fields `release`, `recorded_by` and `owner_statement`.
+- Tests: a full-loop lifecycle test of `status.py` (P0 → G0 → shape → G1 → slices → demo → merge → release → tag → learnings).
+
+### Changed
+- `AGENTS.md` template: "How work starts" points agents to the orchestrator.
+- Skills: the reviewer writes to `docs/reviews/`; shaping sets `in-review`; the implementer ticks slices; the documenter tags after G3.
+- New projects start with an empty Unreleased section in `CHANGELOG.md`.
+- The increment template's slice placeholder is now detectable by the placeholder check.
+
+### Upgrade (from 0.3.0)
+1. Run `python <dev-process>/tooling/scaffold.py <project> --upgrade` (with `--adapter claude` if you use it, to get subagents).
+2. Add the "How work starts" bullet from `.process/templates/AGENTS.md` to your `AGENTS.md`.
+3. Move existing reviewer summaries for G0, G1 and G3 (if you kept any) to `docs/reviews/<gate>-<key>.md`.
+4. Run `python .process/status.py` to check that it reads your project correctly, then say "continue" to your agent.
+
 ## [0.3.0] - 2026-10-19
 Agent instructions are now **skills**, and rules can be **enforced** by guardrails ([PDR-0007](governance/decisions/PDR-0007-skills-and-guardrails.md)).
 

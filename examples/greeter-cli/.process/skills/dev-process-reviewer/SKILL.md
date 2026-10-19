@@ -6,7 +6,9 @@ description: Critically review an artefact or pull request against its inputs be
 
 - **When:** before every gate (G0–G3). Run in a fresh session, separate from the one that did the work, if your tool allows.
 - **Reads:** the artefact under review **and its inputs** (code against requirements, design against NFRs), plus `docs/standards.md`
-- **Writes:** a reviewer summary (template: `reviewer-summary.md` in this skill's folder, or `.process/templates/reviewer-summary.md`)
+- **Writes:** a reviewer summary (template: `reviewer-summary.md` in this skill's folder, or `.process/templates/reviewer-summary.md`):
+  - G0, G1, G3: `docs/reviews/G0.md`, `docs/reviews/G1-<INC>.md` or `docs/reviews/G3-<version>.md`. Its presence tells `.process/status.py` that the gate is ready for the Owner.
+  - G2: a comment on the pull request.
 
 ## Focus per gate
 | Gate | Focus |

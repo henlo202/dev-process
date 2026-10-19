@@ -21,6 +21,8 @@ python tooling/scaffold.py examples/greeter-cli --name greeter-cli --tier T2
 | `.process/config.yaml` | Guardrails in `block` mode with a ruff lint command, and a waiver with a reason and an expiry date |
 | `CLAUDE.md`, `.claude/` | The Claude Code adapter: skills plus a hook that refuses bypasses and merges |
 | `python .process/check.py` | A clean conformance and traceability report |
+| `python .process/status.py` | Where the project stands: both increments are done, so the next step is preparing a release |
+| `.claude/agents/` | Role subagents the orchestrator delegates to |
 
 ```bash
 cd examples/greeter-cli

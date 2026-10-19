@@ -70,6 +70,22 @@
       "type": "string",
       "pattern": "^INC-\\d+$",
       "description": "increment only"
+    },
+    "release": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "gate-record G3 only: the release decided on"
+    },
+    "recorded_by": {
+      "enum": [
+        "owner",
+        "agent"
+      ],
+      "description": "gate-record: who wrote the record (the decision is always the Owner's)"
+    },
+    "owner_statement": {
+      "type": "string",
+      "description": "gate-record: the Owner's decision, verbatim, when recorded by an agent"
     }
   },
   "allOf": [
@@ -101,6 +117,23 @@
         "required": [
           "increment",
           "requirements"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "recorded_by": {
+            "const": "agent"
+          }
+        },
+        "required": [
+          "recorded_by"
+        ]
+      },
+      "then": {
+        "required": [
+          "owner_statement"
         ]
       }
     }
