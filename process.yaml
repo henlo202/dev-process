@@ -5,7 +5,7 @@
 
 process:
   name: dev-process
-  version: 0.3.0
+  version: 0.4.0
   language: en
   owner: Owner
   summary: >
@@ -33,6 +33,11 @@ roles:
     kind: human
     doc: roles/roles.md
     summary: Sets direction, approves every gate, owns the process.
+  - id: orchestrator
+    name: Orchestrator agent
+    kind: agent
+    doc: roles/roles.md
+    summary: Runs the process. Works out the next step from the repository, delegates it to the right role, and stops only at gates.
   - id: analyst
     name: Analyst agent
     kind: agent
@@ -298,7 +303,7 @@ artefacts:
     name: Reviewer summary
     doc: artefacts/reviewer-summary.md
     template: artefacts/templates/reviewer-summary.md
-    path: null
+    path: docs/reviews/
     scope: increment
     owner: reviewer
     required_tiers: []
@@ -355,6 +360,7 @@ artefacts:
 # kind: role = one per agent role; task = a job the Owner asks for directly.
 # bundle: templates copied into the skill folder when installed in a project.
 skills:
+  - {id: dev-process-orchestrator, kind: role, role: orchestrator, doc: agents/skills/dev-process-orchestrator/SKILL.md, phases: [P0, P1, P2, P3, P4, P5], bundle: []}
   - {id: dev-process-analyst, kind: role, role: analyst, doc: agents/skills/dev-process-analyst/SKILL.md, phases: [P0, P1], bundle: [artefacts/templates/requirements.md]}
   - {id: dev-process-architect, kind: role, role: architect, doc: agents/skills/dev-process-architect/SKILL.md, phases: [P0, P1], bundle: [artefacts/templates/adr.md]}
   - {id: dev-process-planner, kind: role, role: planner, doc: agents/skills/dev-process-planner/SKILL.md, phases: [P0, P1], bundle: [artefacts/templates/increment.md]}
@@ -368,6 +374,7 @@ skills:
   - {id: dev-process-conformance-check, kind: task, role: null, doc: agents/skills/dev-process-conformance-check/SKILL.md, phases: [P1, P3, P4], bundle: []}
 
 guides:
+  - {id: orchestration, name: Running the process day to day, doc: guides/orchestration.md}
   - {id: increments, name: Increments & the loop, doc: guides/increments.md}
   - {id: spikes, name: Spikes (build to learn), doc: guides/spikes.md}
   - {id: guardrails, name: Guardrails (enforcement), doc: guides/guardrails.md}

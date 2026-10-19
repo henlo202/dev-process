@@ -1,5 +1,5 @@
 # Links this project to dev-process. Read by .process/check.py and by agents.
-process_version: "0.3.0"
+process_version: "0.4.0"
 project: "greeter-cli"
 tier: T2            # T1 | T2 | T3: highest tier of work currently expected
 test_paths:               # where to look for requirement IDs referenced by tests

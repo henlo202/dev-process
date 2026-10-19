@@ -24,7 +24,7 @@ updated: {{date}}
 
 ## Task slices
 <!-- Vertical slices, each about half a day of agent work. -->
-- [ ] S1: <slice> (REQ-)
+- [ ] S1: <slice description> (REQ-)
 
 ## Demo
 <!-- Filled in at P3: link or paste the evidence that each acceptance criterion works. -->

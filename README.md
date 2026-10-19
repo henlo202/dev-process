@@ -54,6 +54,13 @@ python tooling/validate.py      # validate structure, links and versions
 python site/build.py            # build the HTML site into _site/
 ```
 
+## Using it day to day
+Open your agent tool in the project and say **"continue"**. The
+[orchestrator](guides/orchestration.md) asks `python .process/status.py` what
+comes next, runs it, and stops only when you need to decide at a gate. You
+state outcomes ("next, users should export CSV") and reply to gates
+("approved"); everything in between runs on its own.
+
 ## Using it with agents
 Point any agent at the project's `AGENTS.md`. Agent instructions are **skills**
 in `.process/skills/`, which tools that support the format discover

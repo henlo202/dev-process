@@ -83,6 +83,7 @@ def refresh_process_dir(project: Path, process: dict):
     dot.mkdir(exist_ok=True)
     shutil.copy2(ROOT / "process.yaml", dot / "process.yaml")
     shutil.copy2(ROOT / "tooling" / "check.py", dot / "check.py")
+    shutil.copy2(ROOT / "tooling" / "status.py", dot / "status.py")
     shutil.copy2(ROOT / "tooling" / "ci" / "process-check.sh", dot / "process-check.sh")
     copy_tree(ROOT / "artefacts" / "templates", dot / "templates")
     copy_tree(ROOT / "tooling" / "guardrails", dot / "guardrails")
@@ -98,6 +99,7 @@ def refresh_process_dir(project: Path, process: dict):
         "- `config.yaml`: this project's tier, limits, guardrails and waivers (yours to edit)\n"
         "- `process.yaml`: snapshot of the pinned process version\n"
         "- `check.py`: conformance checker (`python .process/check.py`, warns only)\n"
+        "- `status.py`: current phase and next step (`python .process/status.py`)\n"
         "- `skills/`: agent skills (`<name>/SKILL.md`)\n"
         "- `guardrails/`: enforcement (`git config core.hooksPath .process/guardrails/git-hooks`)\n"
         "- `adapters/`: optional agent-tool integrations\n"
@@ -106,12 +108,39 @@ def refresh_process_dir(project: Path, process: dict):
     )
 
 
+def install_claude_subagents(process: dict, dest: Path):
+    """One Claude Code subagent per role skill, so each role runs in its own context."""
+    dest.mkdir(parents=True, exist_ok=True)
+    for old in dest.glob("dev-process-*.md"):
+        old.unlink()
+    for skill in process["skills"]:
+        if skill["kind"] != "role" or skill["role"] == "orchestrator":
+            continue  # the orchestrator runs in the main session and delegates to these
+        text = (ROOT / skill["doc"]).read_text(encoding="utf-8")
+        description = yaml.safe_load(text.split("\n---", 1)[0].lstrip("-"))["description"]
+        role = skill["role"].capitalize()
+        (dest / f"{skill['id']}.md").write_text(
+            "---\n" + yaml.safe_dump({"name": skill["id"], "description": description}, sort_keys=False, width=1000)
+            + "---\n"
+            f"You are the dev-process {role} agent for this project.\n\n"
+            f"1. Read `AGENTS.md` and `docs/standards.md`.\n"
+            f"2. Follow `.claude/skills/{skill['id']}/SKILL.md` exactly for the step you were given.\n"
+            "3. Respect the guardrails: feature branches only, the commit convention, lint before commit, "
+            "and never bypass hooks.\n"
+            "4. Do only the step you were given. Never approve a gate or merge.\n"
+            "5. Report back briefly: what you did, the files and commits you changed, and anything that needs "
+            "the Owner.\n",
+            encoding="utf-8")
+
+
 def install_adapter(name: str, project: Path, process: dict, created: list, skipped: list):
     if name == "claude":
         src = ROOT / "adapters" / "claude"
         install_skills(process, project / ".claude" / "skills")
         created.append(".claude/skills/dev-process-* (refreshed)")
         write_new(project / "CLAUDE.md", (src / "CLAUDE.md").read_text(encoding="utf-8"), created, skipped, project)
+        install_claude_subagents(process, project / ".claude" / "agents")
+        created.append(".claude/agents/dev-process-* (refreshed)")
         settings = project / ".claude" / "settings.json"
         if settings.exists():
             current = json.loads(settings.read_text(encoding="utf-8") or "{}")
@@ -177,7 +206,7 @@ def adopt(project: Path, name: str, tier: str, guardrails: str, adapters: list[s
         path, template = art.get("path"), art.get("template")
         if not path:
             continue
-        if tier not in art["required_tiers"] and art["id"] not in ("adr", "gate-record", "spike-report"):
+        if tier not in art["required_tiers"] and art["id"] not in ("adr", "gate-record", "spike-report", "reviewer-summary"):
             continue
         target = project / path
         if path.endswith("/"):

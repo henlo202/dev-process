@@ -21,6 +21,10 @@ AI-agentic development. The current tier is **T2**.
   phase's steps. T1 changes start at P2.
 - When a question cannot be settled on paper, run a time-boxed **spike** on a
   `spike/*` branch, and record a spike report. Spike code is never merged.
+- **How work starts:** when the Owner says "continue" or "what's next", states a
+  new outcome, replies to a gate, or gives no specific task, use the
+  `dev-process-orchestrator` skill. It runs `python .process/status.py` to find
+  the next step, and stops only at gates.
 - Human gates (G0–G3) are approved only by the Owner. **Never** approve a
   gate, merge a pull request or deploy on your own.
 
