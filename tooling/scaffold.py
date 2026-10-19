@@ -28,6 +28,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 ADAPTERS = ("claude",)
+# Hook commands written by earlier versions; upgraded in place because they assumed `python3`.
+OLD_CLAUDE_HOOK_COMMANDS = ['python3 "$CLAUDE_PROJECT_DIR/.process/adapters/claude/pre_tool_use.py"']
 
 # Where to put the first file when an artefact's path is a folder.
 FOLDER_SEEDS = {
@@ -133,6 +135,18 @@ def install_claude_subagents(process: dict, dest: Path):
             encoding="utf-8")
 
 
+def upgrade_claude_hook(current: dict, template: dict) -> bool:
+    """Replace a hook command written by an earlier dev-process version. True if changed."""
+    new = template["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+    changed = False
+    for entry in (current.get("hooks") or {}).get("PreToolUse") or []:
+        for hook in entry.get("hooks") or []:
+            if hook.get("command") in OLD_CLAUDE_HOOK_COMMANDS:
+                hook["command"] = new
+                changed = True
+    return changed
+
+
 def install_adapter(name: str, project: Path, process: dict, created: list, skipped: list):
     if name == "claude":
         src = ROOT / "adapters" / "claude"
@@ -144,7 +158,10 @@ def install_adapter(name: str, project: Path, process: dict, created: list, skip
         settings = project / ".claude" / "settings.json"
         if settings.exists():
             current = json.loads(settings.read_text(encoding="utf-8") or "{}")
-            if "pre_tool_use.py" not in json.dumps(current):
+            if upgrade_claude_hook(current, json.loads((src / "settings.json").read_text(encoding="utf-8"))):
+                settings.write_text(json.dumps(current, indent=2) + "\n", encoding="utf-8")
+                created.append(".claude/settings.json (PreToolUse hook command updated)")
+            elif "pre_tool_use" not in json.dumps(current):
                 skipped.append(".claude/settings.json (exists: add the PreToolUse hook from "
                                ".process/adapters/claude/settings.json by hand)")
         else:
@@ -269,7 +286,17 @@ def upgrade(project: Path, adapters: list[str], hooks: bool):
     print("Read the 'Upgrade' notes in the dev-process CHANGELOG, then run: python .process/check.py")
 
 
+def utf8_stdio() -> None:
+    """Print UTF-8 even where the console or pipe encoding cannot (e.g. cp1252 on Windows)."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main(argv=None):
+    utf8_stdio()
     ap = argparse.ArgumentParser(description="Adopt or upgrade dev-process in a project")
     ap.add_argument("project", help="path to the project root")
     ap.add_argument("--name", help="project name (default: folder name)")

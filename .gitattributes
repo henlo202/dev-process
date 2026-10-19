@@ -1,0 +1,4 @@
+# Shell entry points must keep LF line endings on every platform.
+*.sh text eol=lf
+tooling/guardrails/git-hooks/* text eol=lf
+examples/*/.process/guardrails/git-hooks/* text eol=lf

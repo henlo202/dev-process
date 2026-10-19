@@ -264,7 +264,17 @@ def record_gate(p: Project, args) -> int:
 
 # ------------------------------------------------------------------ output
 
+def utf8_stdio() -> None:
+    """Print UTF-8 even where the console or pipe encoding cannot (e.g. cp1252 on Windows)."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main(argv=None) -> int:
+    utf8_stdio()
     ap = argparse.ArgumentParser(description="Where is this project in dev-process, and what is next?")
     ap.add_argument("--project", default=".")
     ap.add_argument("--json", action="store_true")

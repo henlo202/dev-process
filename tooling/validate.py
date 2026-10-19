@@ -26,7 +26,17 @@ LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 CONTENT_DIRS = ["phases", "gates", "artefacts", "roles", "guides", "governance", "agents", "adapters"]
 
 
+def utf8_stdio() -> None:
+    """Print UTF-8 even where the console or pipe encoding cannot (e.g. cp1252 on Windows)."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main() -> int:
+    utf8_stdio()
     errors: list[str] = []
     process = yaml.safe_load((ROOT / "process.yaml").read_text(encoding="utf-8"))
     schema = json.loads((ROOT / "schema" / "process.schema.json").read_text(encoding="utf-8"))

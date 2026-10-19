@@ -62,7 +62,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^(REQ|NFR)-\\d+$"
+        "pattern": "^[A-Z][A-Z0-9]*-\\d+$"
       },
       "description": "increment only: requirement IDs in scope"
     },

@@ -1,7 +1,7 @@
 # Requirements handling
 
 ## Principles
-1. **Every requirement is uniquely identified** (`REQ-nnn` functional, `NFR-nnn` non-functional), and IDs are never reused.
+1. **Every requirement is uniquely identified** (by default `REQ-nnn` functional, `NFR-nnn` non-functional), and IDs are never reused. A project may use its own prefixes, for example one per area, by listing them in `requirement_id_prefixes` in `.process/config.yaml`.
 2. **Every requirement is testable.** Acceptance criteria use Given/When/Then, and each one can be checked by an automated test, or is marked `manual` with a reason.
 3. **Every requirement is traceable**: brief → requirement → task → test → release.
 4. **Approved requirements change only through versioning**, never silently.
@@ -22,8 +22,8 @@ Traceability is maintained by convention, so no tool is needed:
 | Commit/PR → requirement | Requirement ID in the PR description |
 | Release → requirement | Changelog entries mention IDs where useful |
 
-The conformance checker scans `docs/requirements/` for IDs and the `test_paths`
-folders for references. It warns about requirements with no test, and about
+The conformance checker scans `docs/requirements/` for IDs (headings `## <ID>` to
+`#### <ID>` with a configured prefix) and the `test_paths` folders for references. It warns about requirements with no test, and about
 references to IDs that do not exist.
 
 ## Working with agents

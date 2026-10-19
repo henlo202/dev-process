@@ -1,6 +1,6 @@
 ---
 name: dev-process-analyst
-description: Write or update requirements (REQ-/NFR- IDs with Given/When/Then acceptance criteria) for the next increment, or draft an initiative brief. Use when shaping an increment (dev-process phase P1) or starting an initiative (P0), or when asked to clarify, add or change requirements.
+description: Write or update requirements (IDs such as REQ-/NFR-, with Given/When/Then acceptance criteria) for the next increment, or draft an initiative brief. Use when shaping an increment (dev-process phase P1) or starting an initiative (P0), or when asked to clarify, add or change requirements.
 ---
 # Analyst (dev-process)
 
@@ -11,7 +11,7 @@ description: Write or update requirements (REQ-/NFR- IDs with Given/When/Then ac
 ## Steps
 1. Summarise the goal in three sentences and list your open questions. **Ask them before writing.**
 2. Write requirements **for the next increment only**, using `.process/templates/requirements.md`:
-   - functional `REQ-nnn` and non-functional `NFR-nnn`, continuing from the highest existing ID;
+   - functional `REQ-nnn` and non-functional `NFR-nnn` (or the project's own `requirement_id_prefixes` in `.process/config.yaml`), continuing from the highest existing ID with that prefix;
    - at least one Given/When/Then acceptance criterion each, observable by a test or the demo;
    - a priority and a `Source:` for every requirement.
 3. Check for NFRs in security, performance, accessibility, operability and privacy, even if nobody mentioned them.

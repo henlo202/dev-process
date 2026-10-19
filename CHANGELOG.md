@@ -7,6 +7,29 @@ All notable changes to dev-process are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-19
+Guardrails now work on **Windows**, and projects can use their own **requirement ID prefixes**.
+
+### Added
+- `requirement_id_prefixes` in `.process/config.yaml` (default `[REQ, NFR]`): the prefixes the checker recognises as requirement IDs, for example one per area (`[SYS, API, UI]`). Requirement headings, test references and increment `requirements:` lists all use them. An invalid value is reported as `config-invalid:requirement_id_prefixes` and the default is used.
+- `.process/guardrails/find-python.sh`: shared Python discovery for every shell entry point. It tries `python3`, `python` and `py -3` by running them, and prefers one that can import PyYAML.
+- `.process/adapters/claude/pre_tool_use.sh`: the Claude Code hook entry point. It blocks (exit 2) when no Python works, instead of silently allowing.
+- Tests: Python discovery (broken `python3` stub, PyYAML preference, no Python at all), the Claude entry point, the settings upgrade, and requirement ID prefixes (`tooling/tests/test_check.py`).
+
+### Fixed
+- Git hooks, CI scripts and the Claude Code hook called `python3` directly. On Windows that is often the Microsoft Store alias, which does not run Python, so every commit was refused and the Claude hook never checked anything.
+- When the first Python on PATH had no PyYAML, the guardrails fell back to their defaults (warn mode) even in `block` projects; a Python with PyYAML is now preferred.
+- The tools crashed on Windows when printing ✔, ✖ or ❌ to a non-UTF-8 console or pipe; their output is now UTF-8.
+
+### Changed
+- The Claude adapter's `settings.json` runs `sh "$CLAUDE_PROJECT_DIR/.process/adapters/claude/pre_tool_use.sh"`. `scaffold.py --upgrade` rewrites the old `python3 …/pre_tool_use.py` command in an existing `.claude/settings.json` and keeps every other hook.
+- The increment `requirements` frontmatter pattern accepts any configured prefix (`^[A-Z][A-Z0-9]*-\d+$`).
+
+### Upgrade (from 0.4.0)
+1. Run `python <dev-process>/tooling/scaffold.py <project> --upgrade` (add `--adapter claude` if you use it). This refreshes the hooks, CI scripts and adapter, and updates the Claude hook command if it is the old one.
+2. If your project uses requirement IDs other than `REQ-`/`NFR-`, add `requirement_id_prefixes: [..]` to `.process/config.yaml` and run `python .process/check.py`.
+3. Make sure a Python 3.9+ with PyYAML is reachable as `python3`, `python` or `py -3` (`pip install pyyaml`). Otherwise the guardrails warn instead of block.
+
 ## [0.4.0] - 2026-10-19
 The process now **runs itself between gates** ([PDR-0008](governance/decisions/PDR-0008-orchestration.md)). In daily use the Owner states outcomes and makes gate decisions; an orchestrator does everything in between.
 

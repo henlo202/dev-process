@@ -47,6 +47,15 @@ AGENT_NEVER = [
 ]
 
 
+def utf8_stdio() -> None:
+    """Print UTF-8 even where the console or pipe encoding cannot (e.g. cp1252 on Windows)."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def repo_root() -> Path:
     """The nearest directory (from cwd upwards) with .process/config.yaml, else the git top level."""
     for d in [Path.cwd(), *Path.cwd().parents]:
@@ -180,6 +189,7 @@ def check_command(command: str, cfg: dict) -> list[str]:
 
 
 def main(argv=None) -> int:
+    utf8_stdio()
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv:
         print(__doc__)

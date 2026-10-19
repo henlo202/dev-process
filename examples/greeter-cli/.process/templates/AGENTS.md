@@ -46,7 +46,7 @@ git config core.hooksPath .process/guardrails/git-hooks   # install guardrails
 |------|----------|
 | `docs/brief.md` | Initiative brief |
 | `docs/increments/` | Increment briefs (INC- IDs): outcome, scope, slices, demo |
-| `docs/requirements/` | Requirements (REQ-/NFR- IDs) |
+| `docs/requirements/` | Requirements (IDs use the `requirement_id_prefixes` in `.process/config.yaml`) |
 | `docs/spikes/` | Spike reports |
 | `docs/architecture.md` | Architecture |
 | `docs/adr/` | Architecture decision records |

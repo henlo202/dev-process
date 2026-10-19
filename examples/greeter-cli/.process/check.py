@@ -41,8 +41,9 @@ NO_FRONTMATTER = {"AGENTS.md", "CHANGELOG.md", ".process/config.yaml"}
 STATUSES = {"draft", "in-review", "approved", "in-progress", "done", "superseded"}
 DECISIONS = {"approved", "approved-with-conditions", "rejected"}
 
-REQ_DEF = re.compile(r"^#{2,4}\s+((?:REQ|NFR)-\d+)\b", re.MULTILINE)
-REQ_REF = re.compile(r"(?<![A-Za-z0-9])(REQ|NFR)[-_](\d+)(?![0-9])")
+# Requirement ID prefixes; a project may set its own with `requirement_id_prefixes`.
+DEFAULT_REQUIREMENT_PREFIXES = ["REQ", "NFR"]
+PREFIX = re.compile(r"^[A-Z][A-Z0-9]{0,9}$")
 STATUS_LINE = re.compile(r"\*\*Status:\*\*\s*([a-z-]+)", re.IGNORECASE)
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SLICE = re.compile(r"^\s*[-*]\s+(?:\[[ xX]\]\s+)?S\d+\b", re.MULTILINE)
@@ -180,14 +181,39 @@ def check_artefacts(root: Path, process: dict, tier: str, report: Report):
             validate_frontmatter(rel, fm, art["id"], report)
 
 
-def parse_requirements(root: Path, report: Report) -> dict[str, dict]:
+def requirement_patterns(prefixes: list[str]):
+    """(definition heading, reference) patterns for requirement IDs with these prefixes."""
+    alt = "|".join(re.escape(p) for p in prefixes)
+    return (re.compile(rf"^#{{2,4}}\s+((?:{alt})-\d+)\b", re.MULTILINE),
+            re.compile(rf"(?<![A-Za-z0-9])({alt})[-_](\d+)(?![0-9])"))
+
+
+REQ_DEF, REQ_REF = requirement_patterns(DEFAULT_REQUIREMENT_PREFIXES)
+
+
+def requirement_prefixes(config: dict, report: Report) -> list[str]:
+    raw = config.get("requirement_id_prefixes")
+    if raw is None:
+        return list(DEFAULT_REQUIREMENT_PREFIXES)
+    if isinstance(raw, list) and raw and all(isinstance(p, str) and PREFIX.match(p) for p in raw):
+        return list(raw)
+    report.add(
+        "config-invalid:requirement_id_prefixes", ERROR,
+        f"`requirement_id_prefixes` is `{raw}`; it must be a non-empty list of upper-case prefixes "
+        f"such as [REQ, NFR]. Using the default.",
+        "Fix `.process/config.yaml`.", "artefacts/process-config.md",
+    )
+    return list(DEFAULT_REQUIREMENT_PREFIXES)
+
+
+def parse_requirements(root: Path, report: Report, req_def=REQ_DEF) -> dict[str, dict]:
     reqs: dict[str, dict] = {}
     req_dir = root / "docs" / "requirements"
     if not req_dir.is_dir():
         return reqs
     for md in markdown_files(req_dir):
         text = md.read_text(encoding="utf-8", errors="replace")
-        matches = list(REQ_DEF.finditer(text))
+        matches = list(req_def.finditer(text))
         for i, m in enumerate(matches):
             rid = m.group(1)
             section = text[m.end(): matches[i + 1].start() if i + 1 < len(matches) else len(text)]
@@ -219,7 +245,8 @@ def iter_test_files(root: Path, test_paths: list[str]):
 
 
 def check_traceability(root: Path, config: dict, report: Report) -> dict[str, dict]:
-    reqs = parse_requirements(root, report)
+    req_def, req_ref = requirement_patterns(requirement_prefixes(config, report))
+    reqs = parse_requirements(root, report, req_def)
     if not reqs:
         return reqs
     refs: dict[str, list[str]] = {}
@@ -230,7 +257,7 @@ def check_traceability(root: Path, config: dict, report: Report) -> dict[str, di
             continue
         rel = f.relative_to(root).as_posix()
         for lineno, line in enumerate(text.splitlines(), 1):
-            for m in REQ_REF.finditer(line):
+            for m in req_ref.finditer(line):
                 rid = f"{m.group(1)}-{m.group(2)}"
                 loc = f"{rel}:{lineno}"
                 if loc not in refs.setdefault(rid, []):
@@ -461,7 +488,17 @@ def render(report: Report, project: str, tier: str, version: str, snapshot_versi
     return "\n".join(lines) + "\n"
 
 
+def utf8_stdio() -> None:
+    """Print UTF-8 even where the console or pipe encoding cannot (e.g. cp1252 on Windows)."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main(argv=None) -> int:
+    utf8_stdio()
     ap = argparse.ArgumentParser(description="dev-process conformance checker (warn-only)")
     ap.add_argument("--project", default=".", help="project root (default: current directory)")
     ap.add_argument("--output", help="also write the report to this file")

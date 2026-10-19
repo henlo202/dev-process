@@ -109,7 +109,7 @@ class GuardrailsInRepo(unittest.TestCase):
     def test_claude_adapter_blocks_agent_commands(self):
         hook = self.repo / ".process" / "adapters" / "claude" / "pre_tool_use.py"
         settings = json.loads((self.repo / ".claude" / "settings.json").read_text())
-        self.assertIn("pre_tool_use.py", json.dumps(settings))
+        self.assertIn("pre_tool_use.sh", json.dumps(settings))
         self.assertTrue((self.repo / ".claude" / "skills" / "dev-process-implementer" / "SKILL.md").is_file())
 
         def run(command):
@@ -127,6 +127,77 @@ class GuardrailsInRepo(unittest.TestCase):
                         "git config core.hooksPath .process/guardrails/git-hooks",
                         "cd app && git config core.hooksPath .process/guardrails/git-hooks && git status"]:
             self.assertEqual(run(allowed).returncode, 0, allowed)
+
+    # --- Python discovery (v0.5.0): stubs such as the Microsoft Store "python3" are skipped ---
+
+    def fake_bin(self, broken=("python3",), working=("python",), no_yaml=()):
+        """A directory to put first on PATH, with broken, working and PyYAML-less Python commands."""
+        bin_dir = Path(self.tmp.name) / ("bin-" + "-".join(broken))
+        bin_dir.mkdir(exist_ok=True)
+        for name in broken:
+            (bin_dir / name).write_text("#!/bin/sh\necho 'Python was not found (stub)' >&2\nexit 49\n")
+            (bin_dir / name).chmod(0o755)
+        for name in working:
+            (bin_dir / name).write_text(f'#!/bin/sh\nexec "{Path(sys.executable).as_posix()}" "$@"\n')
+            (bin_dir / name).chmod(0o755)
+        return {"PATH": str(bin_dir) + os.pathsep + os.environ.get("PATH", "")}
+
+    def test_hooks_skip_a_broken_python3(self):
+        env = self.fake_bin(broken=("python3",), working=("python",))
+        r = self.commit("feat: on main", env=env)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("protected branch `main`", r.stderr)  # guard.py ran, via `python`
+        self.assertNotIn("stub", r.stderr)
+
+    def test_hooks_prefer_a_python_with_pyyaml(self):
+        # python3 runs but lacks PyYAML (guard.py would fall back to warn mode); python has it.
+        env = self.fake_bin(broken=(), working=("python",), no_yaml=("python3",))
+        r = self.commit("feat: on main", env=env)
+        self.assertNotEqual(r.returncode, 0)  # block mode was read from config.yaml
+        self.assertIn("protected branch `main`", r.stderr)
+        self.assertNotIn("PyYAML missing", r.stderr)
+
+    def test_hooks_refuse_when_no_python_works(self):
+        env = self.fake_bin(broken=("python3", "python", "py"), working=())
+        r = self.commit("feat: no python", env=env)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("no working Python", r.stderr)
+        r = self.commit("chore: owner", env={**env, "DEV_PROCESS_OWNER_OVERRIDE": "1"})
+        self.assertEqual(r.returncode, 0)
+
+    def run_claude_entry(self, command, env=None):
+        entry = self.repo / ".process" / "adapters" / "claude" / "pre_tool_use.sh"
+        event = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+        return subprocess.run(["sh", str(entry)], input=event, capture_output=True, text=True, cwd=self.repo,
+                              env={**os.environ, "CLAUDE_PROJECT_DIR": str(self.repo), **(env or {})})
+
+    def test_claude_entry_point_finds_python_and_blocks(self):
+        env = self.fake_bin(broken=("python3",), working=("python",))
+        r = self.run_claude_entry("git push origin main", env)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("Blocked by dev-process guardrails", r.stderr)
+        self.assertEqual(self.run_claude_entry("pytest -q", env).returncode, 0)
+
+    def test_claude_entry_point_blocks_without_python(self):
+        env = self.fake_bin(broken=("python3", "python", "py"), working=())
+        r = self.run_claude_entry("pytest -q", env)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("no working Python", r.stderr)
+
+    def test_upgrade_rewrites_the_old_claude_hook_command(self):
+        settings = self.repo / ".claude" / "settings.json"
+        data = json.loads(settings.read_text())
+        old = 'python3 "$CLAUDE_PROJECT_DIR/.process/adapters/claude/pre_tool_use.py"'
+        data["hooks"]["PreToolUse"][0]["hooks"][0]["command"] = old
+        data["hooks"]["PreToolUse"].append({"matcher": "Edit", "hooks": [{"type": "command", "command": "mine"}]})
+        settings.write_text(json.dumps(data))
+        subprocess.run([sys.executable, str(ROOT / "tooling" / "scaffold.py"), str(self.repo), "--upgrade"],
+                       capture_output=True, check=True)
+        upgraded = json.loads(settings.read_text())
+        commands = [h["command"] for e in upgraded["hooks"]["PreToolUse"] for h in e["hooks"]]
+        self.assertIn('sh "$CLAUDE_PROJECT_DIR/.process/adapters/claude/pre_tool_use.sh"', commands)
+        self.assertNotIn(old, commands)
+        self.assertIn("mine", commands)  # the project's own hooks are kept
 
 
 class CheckCommandUnit(unittest.TestCase):
