@@ -25,4 +25,7 @@ decision is yours alone.
 - **Rejected:** archive the brief with the reason. A rejected brief is still useful history.
 
 ## Record
-Create `docs/gates/G0-<yyyy-mm-dd>.md` from the [gate record template](../artefacts/gate-record.md).
+Reply to the orchestrator with your decision (e.g. "approved"). It records it
+verbatim with `python .process/status.py record-gate G0`, which refuses
+unless this gate is pending. Or write the record yourself from the
+[gate record template](../artefacts/gate-record.md).

@@ -10,7 +10,8 @@ own homework.
 
 ### Owner
 - Sets direction and priorities. Writes or approves the brief.
-- Approves **every** gate (G0–G3). This cannot be delegated to an agent.
+- Approves **every** gate (G0–G3). This cannot be delegated to an agent. The orchestrator may *record* a decision the Owner has stated, verbatim ([PDR-0008](../governance/decisions/PDR-0008-orchestration.md)).
+- In day-to-day use, only states outcomes and makes gate decisions. The [orchestrator](../guides/orchestration.md) runs everything in between.
 - Owns `AGENTS.md`, the autonomy level and all waivers.
 - Owns the process itself (see [governance](../governance/ownership.md)).
 
@@ -18,6 +19,7 @@ own homework.
 
 | Role | Main phases | Produces | Must not |
 |------|-------------|----------|----------|
+| **Orchestrator** | all | Runs the loop: asks `.process/status.py` for the next step, delegates it, records the Owner's stated gate decisions | Approve, merge or release; record a decision the Owner did not state |
 | **Analyst** | P0, P1 | Brief draft, requirements for the next increment, acceptance criteria | Invent requirements without a source |
 | **Architect** | P0, P1 | Design notes, ADRs, design spikes, test strategy, risk register | Accept its own ADRs |
 | **Planner** | P0, P1 | Increment brief, slices, size check | Let an increment exceed the size limit silently |

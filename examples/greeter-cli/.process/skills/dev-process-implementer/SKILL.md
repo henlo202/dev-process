@@ -23,8 +23,9 @@ description: Implement a task slice test-first on a feature branch, following th
 5. Run the full test suite and the lint command. Commit in small steps.
 6. Update the docs and the `CHANGELOG.md` Unreleased section (or hand over to the documenter).
 7. Run `python .process/check.py` and fix any new findings.
-8. Open a PR with the increment and slice IDs, the requirement IDs, a summary, any tests changed or deleted, and the G2 checklist.
-9. On the slice that completes the increment, record the demo (skill `dev-process-demo`).
+8. Tick the slice (`- [x] S2: …`) in the increment brief, in the same PR. `.process/status.py` uses the ticks to pick the next slice.
+9. Open a PR with the increment and slice IDs, the requirement IDs, a summary, any tests changed or deleted, and the G2 checklist.
+10. On the slice that completes the increment, record the demo (skill `dev-process-demo`).
 
 ## Never
 Merge, deploy, bypass hooks, merge spike code, add dependencies or change CI without asking.

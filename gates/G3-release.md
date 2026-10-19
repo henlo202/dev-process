@@ -19,6 +19,7 @@ Decide that a set of merged changes is ready for users.
 Approved (tag and deploy) / Approved with conditions / Rejected.
 
 ## Record
-Create `docs/gates/G3-<version>.md` from the [gate record template](../artefacts/gate-record.md).
-For T1-only releases, an annotated git tag whose message contains the
-ticked checklist is enough.
+Reply to the orchestrator with your decision (e.g. "approved"). It records it
+verbatim with `python .process/status.py record-gate G3`, which refuses
+unless this gate is pending. Or write the record yourself from the
+[gate record template](../artefacts/gate-record.md).

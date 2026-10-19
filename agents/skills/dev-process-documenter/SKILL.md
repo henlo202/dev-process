@@ -12,7 +12,7 @@ description: Keep user docs (Diátaxis), architecture, runbook, changelog and re
 1. For each behaviour change, update the matching user doc: a tutorial, how-to, reference or explanation page.
 2. Update the architecture doc and the runbook when structure, config, deployment or alerts change.
 3. Add a `CHANGELOG.md` Unreleased entry for each user-visible change.
-4. At release (P4), move the entries under the new version and write user-facing release notes.
+4. At release (P4), move the entries under a new `## [X.Y.Z] - date` heading and write user-facing release notes. After the Owner approves G3, create the annotated tag `vX.Y.Z` and follow the runbook's deploy steps.
 5. Check that the docs are true: run the documented commands and follow the documented steps.
 6. After incidents (P5), add a post-incident note to the runbook.
 

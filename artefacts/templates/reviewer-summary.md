@@ -1,4 +1,10 @@
-## Reviewer summary: <artefact or PR> for <gate>
+---
+artefact: reviewer-summary
+status: done
+updated: {{date}}
+gate: G1               # the gate this review prepares
+---
+# Reviewer summary: <artefact or PR> for <gate>
 
 **Reviewed:** <files / commit / version>
 **Against:** <inputs, e.g. requirements v0.2, ADR-0003>

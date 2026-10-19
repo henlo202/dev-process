@@ -32,4 +32,7 @@ at what it showed. **A working prototype is better evidence than a paragraph.**
 - **Rejected:** reshape the increment, or drop it.
 
 ## Record
-Create `docs/gates/G1-<INC-id>.md` from the [gate record template](../artefacts/gate-record.md).
+Reply to the orchestrator with your decision (e.g. "approved"). It records it
+verbatim with `python .process/status.py record-gate G1`, which refuses
+unless this gate is pending. Or write the record yourself from the
+[gate record template](../artefacts/gate-record.md).

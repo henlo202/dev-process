@@ -30,6 +30,8 @@ jobs:
           python -m unittest discover -s tests
           diff -q ../../tooling/check.py .process/check.py
           diff -q ../../tooling/guardrails/guard.py .process/guardrails/guard.py
+          diff -q ../../tooling/status.py .process/status.py
+          python .process/status.py
           pip install ruff
           python .process/guardrails/guard.py ci
           python .process/check.py | tee -a "$GITHUB_STEP_SUMMARY"
