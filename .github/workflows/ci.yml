@@ -28,12 +28,21 @@ jobs:
           python .process/check.py | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Build site
         run: python site/build.py
-      - uses: actions/upload-pages-artifact@v3
+      # Download from the run's Artifacts section and open index.html locally.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: _site
+      - if: vars.PAGES_ENABLED == 'true'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
+  # Optional: publishing to GitHub Pages runs only when the repository variable
+  # PAGES_ENABLED is "true" (Settings > Secrets and variables > Actions > Variables)
+  # and Pages is enabled with source "GitHub Actions".
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PAGES_ENABLED == 'true'
     needs: validate
     runs-on: ubuntu-latest
     permissions:

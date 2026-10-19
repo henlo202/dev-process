@@ -4,7 +4,7 @@ A standard, **tool-neutral** process for **AI-agentic software development**.
 One human Owner, several AI agent roles, and human approval at defined gates.
 
 - **Machine-readable:** [`process.yaml`](process.yaml) (validated by [JSON Schema](schema/process.schema.json)) plus Markdown with frontmatter
-- **Human-navigable:** a generated HTML site (`python site/build.py`, output in `_site/`)
+- **Human-navigable:** a generated HTML site (`python site/build.py`, output in `_site/`). Every CI run also attaches it as the `site` artifact. Publishing to GitHub Pages is optional: set the repository variable `PAGES_ENABLED=true` and set the Pages source to "GitHub Actions".
 - **Enforced gently:** a conformance checker that warns and never blocks
 
 ## The process at a glance

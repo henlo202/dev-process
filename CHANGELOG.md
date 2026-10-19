@@ -6,6 +6,8 @@ All notable changes to dev-process are documented here. The format follows
 [governance/versioning.md](governance/versioning.md).
 
 ## [Unreleased]
+### Changed
+- CI: publishing to GitHub Pages is now optional (repository variable `PAGES_ENABLED`). The built site is always attached to each run as the `site` artifact.
 
 ## [0.1.0] - 2026-10-19
 ### Added
