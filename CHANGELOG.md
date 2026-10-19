@@ -19,6 +19,7 @@ Guardrails now work on **Windows**, and projects can use their own **requirement
 ### Fixed
 - Git hooks, CI scripts and the Claude Code hook called `python3` directly. On Windows that is often the Microsoft Store alias, which does not run Python, so every commit was refused and the Claude hook never checked anything.
 - When the first Python on PATH had no PyYAML, the guardrails fell back to their defaults (warn mode) even in `block` projects; a Python with PyYAML is now preferred.
+- Text in inline code (for example `` `--player <name or id>` ``) was reported as an unfilled template placeholder; inline code is now skipped like fenced code, in `check.py` and `status.py`.
 - The tools crashed on Windows when printing ✔, ✖ or ❌ to a non-UTF-8 console or pipe; their output is now UTF-8.
 
 ### Changed

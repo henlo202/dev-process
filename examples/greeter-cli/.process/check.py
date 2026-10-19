@@ -50,7 +50,8 @@ SLICE = re.compile(r"^\s*[-*]\s+(?:\[[ xX]\]\s+)?S\d+\b", re.MULTILINE)
 DEFAULT_LIMITS = {"max_requirements": 5, "max_slices": 8}
 # Template placeholders such as "<short title>" (contain a space, no attributes).
 PLACEHOLDER = re.compile(r"<(?!!--)[A-Za-z][^<>=\"`\n]*\s[^<>=\"`\n]*>")
-FENCE = re.compile(r"```.*?```", re.DOTALL)
+# Code is never a placeholder: fenced blocks and inline spans such as `--player <name or id>`.
+FENCE = re.compile(r"```.*?```|`[^`\n]+`", re.DOTALL)
 
 
 @dataclass

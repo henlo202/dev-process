@@ -30,7 +30,8 @@ from pathlib import Path
 import yaml
 
 PLACEHOLDER = re.compile(r"<(?!!--)[A-Za-z][^<>=\"`\n]*\s[^<>=\"`\n]*>")
-FENCE = re.compile(r"```.*?```", re.DOTALL)
+# Code is never a placeholder: fenced blocks and inline spans such as `--player <name or id>`.
+FENCE = re.compile(r"```.*?```|`[^`\n]+`", re.DOTALL)
 SLICE = re.compile(r"^\s*[-*]\s+\[([ xX])\]\s+(S\d+)\b[:\s]*(.*)$", re.MULTILINE)
 VERSION_HEADING = re.compile(r"^## \[(\d+\.\d+\.\d+)\]", re.MULTILINE)
 GATE_NAMES = {"G0": "Go / No-go", "G1": "Shape approved", "G2": "Merge approved", "G3": "Release approved"}

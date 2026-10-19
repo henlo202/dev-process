@@ -37,6 +37,16 @@ def test_runs_locally():
 """
 
 
+# Angle brackets inside inline code and fenced blocks are syntax, not template placeholders.
+CODE_SNIPPETS = """
+Run `garmin-sync --player <name or id> recent`.
+
+```
+auth.py --player <player id>
+```
+"""
+
+
 class RequirementPrefixes(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -76,6 +86,14 @@ class RequirementPrefixes(unittest.TestCase):
         self.assertNotIn("`REQ-003`", text)  # REQ is not configured for this project
         self.assertIn("unknown-requirement:UI-099", text)  # configured prefix, undefined ID
         self.assertNotIn("SHA-256", text)  # not a configured prefix, so never an ID
+
+    def test_placeholders_in_code_are_not_template_placeholders(self):
+        brief = self.repo / "docs" / "brief.md"
+        brief.write_text(brief.read_text(encoding="utf-8") + CODE_SNIPPETS, encoding="utf-8")
+        text = self.report()
+        self.assertIn("placeholder:docs/brief.md", text)  # the template's own placeholders remain
+        self.assertNotIn("<name or id>", text)
+        self.assertNotIn("<player id>", text)
 
     def test_invalid_prefixes_fall_back_to_the_default(self):
         self.set_prefixes("[sys, 'A-B']")
