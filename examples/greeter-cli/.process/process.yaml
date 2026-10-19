@@ -5,7 +5,7 @@
 
 process:
   name: dev-process
-  version: 0.1.0
+  version: 0.2.0
   language: en
   owner: Owner
   summary: >
@@ -17,15 +17,15 @@ tiers:
   - id: T1
     name: Trivial
     doc: guides/risk-tiers.md
-    summary: Small, low-risk change inside an existing initiative (bug fix, copy change, dependency bump).
+    summary: Small, low-risk change inside an existing initiative (bug fix, copy change, dependency bump). Skips shaping.
   - id: T2
     name: Standard
     doc: guides/risk-tiers.md
-    summary: A normal feature or change with a clear scope and limited blast radius.
+    summary: A normal increment with a clear outcome and limited blast radius.
   - id: T3
     name: Major
     doc: guides/risk-tiers.md
-    summary: New initiative, new architecture, security-sensitive work, data migrations or anything hard to reverse.
+    summary: New architecture, security-sensitive work, data migrations or anything hard to reverse. Adds design scrutiny at G1.
 
 roles:
   - id: owner
@@ -37,22 +37,22 @@ roles:
     name: Analyst agent
     kind: agent
     doc: roles/roles.md
-    summary: Elicits and writes requirements and acceptance criteria.
+    summary: Elicits and writes requirements and acceptance criteria while shaping an increment.
   - id: architect
     name: Architect agent
     kind: agent
     doc: roles/roles.md
-    summary: Proposes architecture, writes ADRs and the test strategy.
+    summary: Shapes the "how" of an increment, runs design spikes, writes ADRs and the test strategy.
   - id: planner
     name: Planner agent
     kind: agent
     doc: roles/roles.md
-    summary: Breaks work into small, traceable tasks.
+    summary: Keeps increments small and writes the increment brief with its task slices.
   - id: implementer
     name: Implementer agent
     kind: agent
     doc: roles/roles.md
-    summary: Writes code and tests, test-first, on a branch.
+    summary: Writes code and tests test-first, runs throwaway spikes, and records demos.
   - id: tester
     name: Tester agent
     kind: agent
@@ -69,70 +69,62 @@ roles:
     doc: roles/roles.md
     summary: Keeps technical, operational and user documentation current.
 
+# The process is a loop: P0 runs once per initiative, then every change runs
+# through the increment loop P1..P5 and back to P1 (T1 changes enter at P2).
 phases:
   - id: P0
     name: Initiate
     doc: phases/P0-initiate.md
     once_per_initiative: true
+    loop: false
     tiers: [T1, T2, T3]
-    roles: [owner, analyst]
+    roles: [owner, analyst, architect]
     inputs: []
-    outputs: [brief, agents-context, process-config]
+    outputs: [brief, agents-context, process-config, architecture, test-strategy]
     gate: G0
   - id: P1
-    name: Requirements
-    doc: phases/P1-requirements.md
+    name: Shape
+    doc: phases/P1-shape.md
+    loop: true
     tiers: [T2, T3]
-    roles: [owner, analyst, reviewer]
-    inputs: [brief]
-    outputs: [requirements]
+    roles: [owner, analyst, architect, planner, reviewer]
+    inputs: [brief, requirements, architecture, retrospective]
+    outputs: [increment, requirements, spike-report, architecture, adr, test-strategy, risk-register]
     gate: G1
   - id: P2
-    name: Design
-    doc: phases/P2-design.md
-    tiers: [T2, T3]
-    roles: [owner, architect, reviewer]
-    inputs: [brief, requirements]
-    outputs: [architecture, adr, test-strategy, risk-register]
-    gate: G2
-  - id: P3
-    name: Plan
-    doc: phases/P3-plan.md
-    tiers: [T2, T3]
-    roles: [owner, planner, reviewer]
-    inputs: [requirements, architecture, test-strategy]
-    outputs: [plan]
-    gate: G3
-  - id: P4
     name: Build
-    doc: phases/P4-build.md
+    doc: phases/P2-build.md
+    loop: true
     tiers: [T1, T2, T3]
     roles: [implementer, tester, documenter]
-    inputs: [plan, requirements, architecture, test-strategy, agents-context]
+    inputs: [increment, requirements, architecture, test-strategy, agents-context]
     outputs: [code, tests, user-docs, changelog]
     gate: null
-  - id: P5
+  - id: P3
     name: Verify
-    doc: phases/P5-verify.md
+    doc: phases/P3-verify.md
+    loop: true
     tiers: [T1, T2, T3]
     roles: [owner, tester, reviewer]
-    inputs: [code, tests, requirements]
-    outputs: [traceability-report, conformance-report]
-    gate: G4
-  - id: P6
+    inputs: [code, tests, requirements, increment]
+    outputs: [traceability-report, conformance-report, demo]
+    gate: G2
+  - id: P4
     name: Release
-    doc: phases/P6-release.md
+    doc: phases/P4-release.md
+    loop: true
     tiers: [T1, T2, T3]
     roles: [owner, documenter, reviewer]
     inputs: [changelog, runbook, user-docs, traceability-report]
     outputs: [release-notes, runbook]
-    gate: G5
-  - id: P7
-    name: Operate & Learn
-    doc: phases/P7-operate.md
+    gate: G3
+  - id: P5
+    name: Learn
+    doc: phases/P5-learn.md
+    loop: true
     tiers: [T2, T3]
     roles: [owner, documenter]
-    inputs: [runbook]
+    inputs: [runbook, increment]
     outputs: [retrospective]
     gate: null
 
@@ -146,37 +138,25 @@ gates:
     tiers: [T1, T2, T3]
     evidence: [brief, reviewer-summary]
   - id: G1
-    name: Requirements approved
-    doc: gates/G1-requirements.md
+    name: Shape approved
+    doc: gates/G1-shape.md
     after: P1
     approver: owner
     tiers: [T2, T3]
-    evidence: [requirements, reviewer-summary]
+    evidence: [increment, requirements, reviewer-summary]
+    tier_evidence:
+      T3: [architecture, adr, test-strategy, risk-register]
   - id: G2
-    name: Design approved
-    doc: gates/G2-design.md
-    after: P2
-    approver: owner
-    tiers: [T3]
-    evidence: [architecture, adr, test-strategy, risk-register, reviewer-summary]
-  - id: G3
-    name: Plan approved
-    doc: gates/G3-plan.md
+    name: Merge approved
+    doc: gates/G2-merge.md
     after: P3
     approver: owner
-    tiers: [T3]
-    evidence: [plan, reviewer-summary]
-  - id: G4
-    name: Merge approved
-    doc: gates/G4-merge.md
-    after: P5
-    approver: owner
     tiers: [T1, T2, T3]
-    evidence: [traceability-report, conformance-report, reviewer-summary]
-  - id: G5
+    evidence: [demo, traceability-report, conformance-report, reviewer-summary]
+  - id: G3
     name: Release approved
-    doc: gates/G5-release.md
-    after: P6
+    doc: gates/G3-release.md
+    after: P4
     approver: owner
     tiers: [T1, T2, T3]
     evidence: [release-notes, runbook, reviewer-summary]
@@ -250,14 +230,30 @@ artefacts:
     scope: initiative
     owner: architect
     required_tiers: [T3]
-  - id: plan
-    name: Task plan
-    doc: artefacts/plan.md
-    template: artefacts/templates/plan.md
-    path: docs/plan.md
+  - id: increment
+    name: Increment brief
+    doc: artefacts/increment.md
+    template: artefacts/templates/increment.md
+    path: docs/increments/
     scope: increment
     owner: planner
-    required_tiers: [T3]
+    required_tiers: [T2, T3]
+  - id: spike-report
+    name: Spike report
+    doc: artefacts/spike-report.md
+    template: artefacts/templates/spike-report.md
+    path: docs/spikes/
+    scope: increment
+    owner: implementer
+    required_tiers: []
+  - id: demo
+    name: Increment demo
+    doc: artefacts/demo.md
+    template: null
+    path: null
+    scope: increment
+    owner: implementer
+    required_tiers: []
   - id: code
     name: Source code
     doc: artefacts/code-and-tests.md
@@ -348,6 +344,8 @@ artefacts:
     required_tiers: []
 
 guides:
+  - {id: increments, name: Increments & the loop, doc: guides/increments.md}
+  - {id: spikes, name: Spikes (build to learn), doc: guides/spikes.md}
   - {id: risk-tiers, name: Risk tiers, doc: guides/risk-tiers.md}
   - {id: requirements-guide, name: Requirements handling, doc: guides/requirements.md}
   - {id: quality-assurance, name: Quality assurance & testing, doc: guides/quality-assurance.md}

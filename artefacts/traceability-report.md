@@ -13,4 +13,4 @@ requirement to the tests that reference it.
 
 ## Rules
 - It is generated in CI on every PR. Never edit it by hand, and do not commit it.
-- Read it at G4 and G5.
+- Read it at G2 and G3.

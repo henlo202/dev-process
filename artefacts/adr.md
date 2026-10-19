@@ -15,4 +15,5 @@ introduces a dependency, or would make a future reader ask "why on earth did the
 ## Rules
 - Never edit an accepted ADR's decision. Write a new ADR that supersedes it, and link the two.
 - At least two real options must be considered.
-- Agents propose ADRs. The Owner accepts them (at G2 for T3, at G4 otherwise).
+- Agents propose ADRs. The Owner accepts them at G1 (or at G2 for decisions made during build).
+- Where possible, compare the options with a [spike](../guides/spikes.md) rather than on paper.

@@ -7,12 +7,13 @@ every project at `.process/playbooks/`, so any agent can use them offline.
 Start an agent session with a prompt like:
 
 > You are the **Reviewer** agent for this project. Read `AGENTS.md` and
-> `.process/playbooks/reviewer.md`, then review PR #42 for gate G4.
+> `.process/playbooks/reviewer.md`, then review PR #42 for gate G2.
 
 Or, for a whole phase:
 
-> We are in phase **P1 · Requirements**. Act as the Analyst agent following
-> `.process/playbooks/analyst.md`. The input is `docs/brief.md`.
+> We are shaping **INC-004** (phase **P1 · Shape**). Act as the Analyst and
+> Planner agents following `.process/playbooks/analyst.md` and `planner.md`.
+> The outcome I want: users can export their data as CSV.
 
 ## Rules common to all roles
 1. Read `AGENTS.md` first. It overrides playbook defaults for this project.

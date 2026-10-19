@@ -7,7 +7,7 @@ id: gate-record
 the checklist, the decision and any conditions. It costs a minute today and
 gives you an audit trail if compliance requirements arrive later.
 
-**Where:** `docs/gates/<gate>-<date-or-version>.md`. For G4, the merged PR is the record.
+**Where:** `docs/gates/<gate>-<increment-date-or-version>.md`. For G2, the merged PR is the record.
 
 ## Rules
 - Reference the exact versions (or commit) of the artefacts you reviewed.

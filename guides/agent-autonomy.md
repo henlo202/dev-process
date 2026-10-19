@@ -7,15 +7,15 @@ The autonomy level states what agents may do without asking. It is set in
 |-------|------|-------------|-------------|
 | **A0** | Advise | Read, and suggest changes in chat | Unfamiliar or sensitive codebases |
 | **A1** | Edit | A0 + edit files locally and run tests | Early in a new initiative |
-| **A2** | Contribute *(default)* | A1 + create branches, commit, push branches, open PRs | Normal work |
+| **A2** | Contribute *(default)* | A1 + create branches, commit, push branches, open PRs, run time-boxed spikes | Normal work |
 | **A3** | Maintain | A2 + merge T1 PRs that have green CI and a clean reviewer summary | Mature projects with strong tests |
 
-**Never at any level:** approve G0–G3 or G5, deploy to production, change
+**Never at any level:** approve G0, G1 or G3, merge spike code, deploy to production, change
 autonomy levels, add waivers, handle real secrets or production personal data.
 
-A3 is the only level where an agent may close a gate (G4 for T1). Use it only
+A3 is the only level where an agent may close a gate (G2 for T1). Use it only
 when the test suite is trustworthy. The Owner still reviews merged T1 changes
-afterwards, at release (G5).
+afterwards, at release (G3).
 
 ## Always ask first (A1–A3)
 - Adding or upgrading dependencies (beyond patch versions)

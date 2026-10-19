@@ -14,9 +14,13 @@ AI-agentic development. The current tier is **{{tier}}**.
 - Role playbooks: `.process/playbooks/` (analyst, architect, planner,
   implementer, tester, reviewer, documenter)
 - Artefact templates: `.process/templates/`
-- Before starting any task, find out which phase you are in (P0–P7) and follow
-  that phase's steps. Produce the artefacts the phase lists.
-- Human gates (G0–G5) are approved only by the Owner. **Never** approve a
+- Work happens in small **increments** (`docs/increments/`), each looping
+  through P1 Shape → P2 Build → P3 Verify → P4 Release → P5 Learn. Before
+  starting, find out which increment and phase you are in, and follow that
+  phase's steps. T1 changes start at P2.
+- When a question cannot be settled on paper, run a time-boxed **spike** on a
+  `spike/*` branch, and record a spike report. Spike code is never merged.
+- Human gates (G0–G3) are approved only by the Owner. **Never** approve a
   gate, merge a pull request or deploy on your own.
 
 ## Commands
@@ -31,7 +35,9 @@ AI-agentic development. The current tier is **{{tier}}**.
 | Path | Contents |
 |------|----------|
 | `docs/brief.md` | Initiative brief |
+| `docs/increments/` | Increment briefs (INC- IDs): outcome, scope, slices, demo |
 | `docs/requirements/` | Requirements (REQ-/NFR- IDs) |
+| `docs/spikes/` | Spike reports |
 | `docs/architecture.md` | Architecture |
 | `docs/adr/` | Architecture decision records |
 | `docs/test-strategy.md` | Test strategy |

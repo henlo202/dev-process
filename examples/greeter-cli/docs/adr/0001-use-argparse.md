@@ -20,3 +20,4 @@ Help text is less polished (REQ-004 is checked manually). Revisit if the CLI gro
 
 ## Links
 - Requirements: NFR-001, REQ-004
+- Evidence: [spike 0001](../spikes/0001-argparse-help-quality.md)

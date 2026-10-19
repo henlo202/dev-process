@@ -9,22 +9,29 @@ One human Owner, several AI agent roles, and human approval at defined gates.
 
 ## The process at a glance
 
+The process is a **loop**. After a one-off setup, every change is a small
+**increment**: one demonstrable outcome, shaped, built, verified, released and
+learned from in a few days.
+
 ```
- P0 Initiate ─G0─► P1 Requirements ─G1─► P2 Design ─G2─► P3 Plan ─G3─► P4 Build ─► P5 Verify ─G4─► P6 Release ─G5─► P7 Operate & Learn
- (once)                                                                    ▲                                              │
-                                                                           └──────────── next increment ◄─────────────────┘
+P0 Initiate ─G0─►  ┌─► P1 Shape ─G1─► P2 Build ─► P3 Verify ─G2─► P4 Release ─G3─► P5 Learn ─┐
+  (once)           │                                                                         │
+                   └──────────────────────── next increment ◄──────────────────────────────────┘
 ```
 
-How much of the process applies is set by the **risk tier**: T1 Trivial, T2 Standard or T3 Major. See [guides/risk-tiers.md](guides/risk-tiers.md).
+- **Shape, don't specify:** detail only the next increment, and settle open questions with throwaway [spikes](guides/spikes.md) rather than long documents.
+- **Gate on outcomes:** the Owner approves merges after watching a [demo](artefacts/demo.md) of the increment working, backed by automated tests.
+- **Stay small:** a [size limit](guides/increments.md#size-limit) per increment, checked automatically.
+- **Scale by risk:** T1 Trivial changes skip shaping, and T3 Major increments add design scrutiny at G1. See [risk tiers](guides/risk-tiers.md).
 
 | Folder | Contents |
 |--------|----------|
-| [`phases/`](phases/) | P0–P7: purpose, steps (who does what), exit criteria |
-| [`gates/`](gates/) | G0–G5: human approval checklists |
+| [`phases/`](phases/) | P0 and the loop P1–P5: purpose, steps (who does what), exit criteria |
+| [`gates/`](gates/) | G0–G3: human approval checklists |
 | [`artefacts/`](artefacts/) | The standard artefacts, plus [`templates/`](artefacts/templates/) |
 | [`roles/`](roles/roles.md) | The Owner and the agent roles |
 | [`agents/`](agents/README.md) | Tool-neutral playbooks for each agent role |
-| [`guides/`](guides/) | Requirements, QA, documentation, security, tiers, autonomy, glossary |
+| [`guides/`](guides/) | Increments, spikes, requirements, QA, documentation, security, tiers, autonomy, glossary |
 | [`governance/`](governance/ownership.md) | How the process itself is owned, changed, versioned and adopted |
 | [`tooling/`](tooling/) | `scaffold.py`, `check.py` (conformance), `validate.py`, CI snippets |
 | [`site/`](site/) | HTML site generator |

@@ -1,7 +1,7 @@
 ---
-id: G5
+id: G3
 ---
-# G5 · Release approved
+# G3 · Release approved
 
 ## Purpose
 Decide that a set of merged changes is ready for users.
@@ -19,6 +19,6 @@ Decide that a set of merged changes is ready for users.
 Approved (tag and deploy) / Approved with conditions / Rejected.
 
 ## Record
-Create `docs/gates/G5-<version>.md` from the [gate record template](../artefacts/gate-record.md).
+Create `docs/gates/G3-<version>.md` from the [gate record template](../artefacts/gate-record.md).
 For T1-only releases, an annotated git tag whose message contains the
 ticked checklist is enough.

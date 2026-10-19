@@ -4,6 +4,9 @@ project: "{{project}}"
 tier: {{tier}}            # T1 | T2 | T3: highest tier of work currently expected
 test_paths:               # where to look for requirement IDs referenced by tests
   - tests
+increment_limits:         # size limit per increment (warn only)
+  max_requirements: 5
+  max_slices: 8
 waivers: []
 # waivers:
 #   - rule: artefact-missing:runbook       # rule id as printed by the checker

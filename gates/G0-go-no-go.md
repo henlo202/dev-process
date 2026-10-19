@@ -15,11 +15,12 @@ decision is yours alone.
 - [ ] Success criteria are measurable, and I will know when the initiative is done.
 - [ ] Non-goals are listed.
 - [ ] The risk tier is chosen and justified.
+- [ ] The first increment is small and clear enough to shape next.
 - [ ] Every finding in the reviewer summary has an answer.
 - [ ] I am willing to spend the time this will take, now.
 
 ## Decisions
-- **Approved:** continue to P1.
+- **Approved:** continue to the first increment (P1).
 - **Approved with conditions:** continue, with the conditions written in the gate record.
 - **Rejected:** archive the brief with the reason. A rejected brief is still useful history.
 

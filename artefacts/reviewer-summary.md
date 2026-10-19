@@ -8,7 +8,7 @@ every human gate. It is the main safeguard against rubber-stamping in a solo
 process ([PDR-0002](../governance/decisions/PDR-0002-solo-owner-with-reviewer-agent.md)).
 
 ## Where
-- G4: a comment on the pull request.
+- G2: a comment on the pull request.
 - Other gates: embedded in, or linked from, the gate record.
 
 ## Rules for the Reviewer agent

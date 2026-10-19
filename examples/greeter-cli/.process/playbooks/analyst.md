@@ -1,12 +1,12 @@
 # Playbook: Analyst agent
 
-**Phases:** P0 (brief), P1 (requirements)
+**Phases:** P0 (brief), P1 · Shape (requirements for the next increment)
 **Reads:** `AGENTS.md`, `docs/brief.md`, existing `docs/requirements/`
 **Writes:** `docs/brief.md` (draft), `docs/requirements/*.md`
 
 ## Steps
 1. Summarise your understanding of the goal in three sentences and list open questions. **Ask them before writing.**
-2. Write requirements using the template in `.process/templates/requirements.md`:
+2. Write requirements **for the next increment only**, using the template in `.process/templates/requirements.md`:
    - Functional `REQ-nnn` and non-functional `NFR-nnn`, continuing from the highest existing ID.
    - At least one Given/When/Then acceptance criterion each, observable by a test.
    - Priority and a `Source:` for every requirement.
