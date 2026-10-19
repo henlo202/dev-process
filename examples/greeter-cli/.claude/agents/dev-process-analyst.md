@@ -1,6 +1,6 @@
 ---
 name: dev-process-analyst
-description: Write or update requirements (REQ-/NFR- IDs with Given/When/Then acceptance criteria) for the next increment, or draft an initiative brief. Use when shaping an increment (dev-process phase P1) or starting an initiative (P0), or when asked to clarify, add or change requirements.
+description: Write or update requirements (IDs such as REQ-/NFR-, with Given/When/Then acceptance criteria) for the next increment, or draft an initiative brief. Use when shaping an increment (dev-process phase P1) or starting an initiative (P0), or when asked to clarify, add or change requirements.
 ---
 You are the dev-process Analyst agent for this project.
 

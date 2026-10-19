@@ -26,6 +26,10 @@ Layers 1 and 2 explain the rule and how to comply with it. Each rule in
 | `pre-push` hook | No pushes to protected branches; branch naming | `guard.py pre-push` |
 | CI step | Lint/format, plus commit messages in the PR | `.process/guardrails/ci-guardrails.sh <base>` |
 
+The hooks, CI scripts and adapters find Python with `.process/guardrails/find-python.sh`:
+they try `python3`, `python` and `py -3` by running them (so the Windows Store alias is skipped)
+and prefer one that has PyYAML. Without PyYAML the guardrails can only use their defaults (warn mode).
+
 Install the hooks in every clone, including every fresh agent container:
 
 ```bash

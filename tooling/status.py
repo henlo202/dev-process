@@ -30,7 +30,8 @@ from pathlib import Path
 import yaml
 
 PLACEHOLDER = re.compile(r"<(?!!--)[A-Za-z][^<>=\"`\n]*\s[^<>=\"`\n]*>")
-FENCE = re.compile(r"```.*?```", re.DOTALL)
+# Code is never a placeholder: fenced blocks and inline spans such as `--player <name or id>`.
+FENCE = re.compile(r"```.*?```|`[^`\n]+`", re.DOTALL)
 SLICE = re.compile(r"^\s*[-*]\s+\[([ xX])\]\s+(S\d+)\b[:\s]*(.*)$", re.MULTILINE)
 VERSION_HEADING = re.compile(r"^## \[(\d+\.\d+\.\d+)\]", re.MULTILINE)
 GATE_NAMES = {"G0": "Go / No-go", "G1": "Shape approved", "G2": "Merge approved", "G3": "Release approved"}
@@ -264,7 +265,17 @@ def record_gate(p: Project, args) -> int:
 
 # ------------------------------------------------------------------ output
 
+def utf8_stdio() -> None:
+    """Print UTF-8 even where the console or pipe encoding cannot (e.g. cp1252 on Windows)."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main(argv=None) -> int:
+    utf8_stdio()
     ap = argparse.ArgumentParser(description="Where is this project in dev-process, and what is next?")
     ap.add_argument("--project", default=".")
     ap.add_argument("--json", action="store_true")

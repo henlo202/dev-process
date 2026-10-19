@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.process/adapters/claude/pre_tool_use.py\""
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.process/adapters/claude/pre_tool_use.sh\""
           }
         ]
       }

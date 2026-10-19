@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Claude Code PreToolUse hook: refuse agent shell commands that break dev-process rules.
 
-Installed by `tooling/scaffold.py --adapter claude` into .claude/settings.json.
+Run by pre_tool_use.sh (which finds a working Python), installed by
+`tooling/scaffold.py --adapter claude` into .claude/settings.json.
 It reuses .process/guardrails/guard.py, so the rules stay in one place. Exit
 code 2 blocks the tool call, and the message on stderr is shown to the agent.
 It enforces the autonomy "never" list (no bypassing hooks, no merging, no
@@ -18,6 +19,7 @@ import guard  # noqa: E402
 
 
 def main() -> int:
+    guard.utf8_stdio()
     try:
         event = json.load(sys.stdin)
     except json.JSONDecodeError:

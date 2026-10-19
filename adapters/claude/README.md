@@ -7,7 +7,7 @@ Optional. Installed into a project with `tooling/scaffold.py --adapter claude`.
 | `CLAUDE.md` | Imports `AGENTS.md`, so Claude Code reads the same instructions as every other agent |
 | `.claude/skills/dev-process-*/` | Copies of the dev-process skills, discovered automatically |
 | `.claude/agents/dev-process-*.md` | One subagent per role, so the orchestrator can delegate each step to a fresh context (reviews in particular) |
-| `.claude/settings.json` | A `PreToolUse` hook running `.process/adapters/claude/pre_tool_use.py` |
+| `.claude/settings.json` | A `PreToolUse` hook running `.process/adapters/claude/pre_tool_use.sh`, which finds a working Python and runs `pre_tool_use.py` |
 
 The hook calls the same `guard.py` as the git hooks. It refuses agent commands
 that bypass hooks (`--no-verify`, `core.hooksPath`, the Owner override), merge

@@ -1,3 +1,13 @@
 #!/bin/sh
 # dev-process guardrail (installed via: git config core.hooksPath .process/guardrails/git-hooks)
-exec python3 "$(git rev-parse --show-toplevel)/.process/guardrails/guard.py" commit-msg "$@"
+ROOT="$(git rev-parse --show-toplevel)"
+. "$ROOT/.process/guardrails/find-python.sh"
+if ! dev_process_find_python; then
+  if [ "${DEV_PROCESS_OWNER_OVERRIDE:-}" = "1" ]; then
+    echo "dev-process guardrails: no working Python found; Owner override active, allowing." >&2
+    exit 0
+  fi
+  echo "dev-process guardrails: no working Python 3.9+ found (tried python3, python, py -3); refusing." >&2
+  exit 1
+fi
+dev_process_python "$ROOT/.process/guardrails/guard.py" commit-msg "$@"
