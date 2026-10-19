@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dev-process structural index",
+  "type": "object",
+  "required": ["process", "tiers", "roles", "phases", "gates", "artefacts", "guides", "governance"],
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9-]+$"},
+    "idList": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+    "tierList": {"type": "array", "items": {"enum": ["T1", "T2", "T3"]}, "uniqueItems": true},
+    "doc": {"type": "string", "pattern": "^[A-Za-z0-9_/.-]+\\.md$"},
+    "docEntry": {
+      "type": "object",
+      "required": ["id", "name", "doc"],
+      "additionalProperties": false,
+      "properties": {"id": {"$ref": "#/$defs/id"}, "name": {"type": "string"}, "doc": {"$ref": "#/$defs/doc"}}
+    }
+  },
+  "properties": {
+    "process": {
+      "type": "object",
+      "required": ["name", "version", "language", "owner", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "language": {"const": "en"},
+        "owner": {"type": "string"},
+        "summary": {"type": "string"}
+      }
+    },
+    "tiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "doc", "summary"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"enum": ["T1", "T2", "T3"]},
+          "name": {"type": "string"},
+          "doc": {"$ref": "#/$defs/doc"},
+          "summary": {"type": "string"}
+        }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "kind", "doc", "summary"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "name": {"type": "string"},
+          "kind": {"enum": ["human", "agent"]},
+          "doc": {"$ref": "#/$defs/doc"},
+          "summary": {"type": "string"}
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "doc", "tiers", "roles", "inputs", "outputs", "gate"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^P\\d$"},
+          "name": {"type": "string"},
+          "doc": {"$ref": "#/$defs/doc"},
+          "once_per_initiative": {"type": "boolean"},
+          "tiers": {"$ref": "#/$defs/tierList"},
+          "roles": {"$ref": "#/$defs/idList"},
+          "inputs": {"$ref": "#/$defs/idList"},
+          "outputs": {"$ref": "#/$defs/idList"},
+          "gate": {"anyOf": [{"type": "string", "pattern": "^G\\d$"}, {"type": "null"}]}
+        }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "doc", "after", "approver", "tiers", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^G\\d$"},
+          "name": {"type": "string"},
+          "doc": {"$ref": "#/$defs/doc"},
+          "after": {"type": "string", "pattern": "^P\\d$"},
+          "approver": {"$ref": "#/$defs/id"},
+          "once_per_initiative": {"type": "boolean"},
+          "tiers": {"$ref": "#/$defs/tierList"},
+          "evidence": {"$ref": "#/$defs/idList"}
+        }
+      }
+    },
+    "artefacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "doc", "template", "path", "scope", "owner", "required_tiers"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "name": {"type": "string"},
+          "doc": {"$ref": "#/$defs/doc"},
+          "template": {"type": ["string", "null"]},
+          "path": {"type": ["string", "null"]},
+          "scope": {"enum": ["initiative", "increment", "generated"]},
+          "owner": {"$ref": "#/$defs/id"},
+          "required_tiers": {"$ref": "#/$defs/tierList"}
+        }
+      }
+    },
+    "guides": {"type": "array", "items": {"$ref": "#/$defs/docEntry"}},
+    "governance": {"type": "array", "items": {"$ref": "#/$defs/docEntry"}}
+  }
+}

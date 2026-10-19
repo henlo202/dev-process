@@ -1,0 +1,14 @@
+# Links this project to dev-process. Read by .process/check.py and by agents.
+process_version: "0.1.0"
+project: "greeter-cli"
+tier: T2            # T1 | T2 | T3: highest tier of work currently expected
+test_paths:               # where to look for requirement IDs referenced by tests
+  - tests
+waivers:
+  - rule: untested-requirement:REQ-004
+    reason: AC-004.1 (plain-language help text) is subjective and checked manually at G4.
+    expires: 2027-10-19
+# waivers:
+#   - rule: artefact-missing:runbook       # rule id as printed by the checker
+#     reason: CLI tool with no runtime; release procedure is in CONTRIBUTING.md
+#     expires: 2027-06-30

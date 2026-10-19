@@ -1,0 +1,47 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Validate process structure, links and version
+        run: python tooling/validate.py
+      - name: Smoke-test scaffolder and checker
+        run: |
+          python tooling/scaffold.py "$RUNNER_TEMP/demo" --name demo --tier T3 --github
+          python "$RUNNER_TEMP/demo/.process/check.py" --project "$RUNNER_TEMP/demo"
+      - name: Worked example tests and conformance
+        working-directory: examples/greeter-cli
+        run: |
+          python -m unittest discover -s tests
+          diff -q ../../tooling/check.py .process/check.py
+          python .process/check.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Build site
+        run: python site/build.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

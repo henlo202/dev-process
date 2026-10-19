@@ -1,0 +1,21 @@
+# dev-process conformance check (warn-only). Added by scaffold.py --github.
+name: process-check
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  process-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sh .process/process-check.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: process-report
+          path: process-report.md

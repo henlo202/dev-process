@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Frontmatter of an artefact inside a project that follows dev-process",
+  "type": "object",
+  "required": ["artefact", "status", "updated"],
+  "properties": {
+    "artefact": {"type": "string", "description": "Artefact id from process.yaml, e.g. requirements"},
+    "status": {"enum": ["draft", "in-review", "approved", "superseded"]},
+    "version": {"type": "string"},
+    "owner": {"type": "string"},
+    "updated": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "links": {"type": "array", "items": {"type": "string"}},
+    "gate": {"type": "string", "pattern": "^G\\d$", "description": "gate-record only"},
+    "decision": {"enum": ["approved", "approved-with-conditions", "rejected"], "description": "gate-record only"},
+    "tier": {"enum": ["T1", "T2", "T3"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"artefact": {"const": "gate-record"}}},
+      "then": {"required": ["gate", "decision", "tier"]}
+    }
+  ]
+}

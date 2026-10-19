@@ -1,0 +1,11 @@
+# Links this project to dev-process. Read by .process/check.py and by agents.
+process_version: "{{process_version}}"
+project: "{{project}}"
+tier: {{tier}}            # T1 | T2 | T3: highest tier of work currently expected
+test_paths:               # where to look for requirement IDs referenced by tests
+  - tests
+waivers: []
+# waivers:
+#   - rule: artefact-missing:runbook       # rule id as printed by the checker
+#     reason: CLI tool with no runtime; release procedure is in CONTRIBUTING.md
+#     expires: 2027-06-30
