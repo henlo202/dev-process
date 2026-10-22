@@ -7,6 +7,10 @@ All notable changes to dev-process are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Project neutrality** ([PDR-0009](governance/decisions/PDR-0009-project-neutral.md)): the process must not name or describe any project that uses it. The rule is in the ownership principles, the change process (draft and review steps), `AGENTS.md` and the project `AGENTS.md` template.
+- `tooling/validate.py` fails when a term from a private list (`.private-terms`, git-ignored, or `DEV_PROCESS_PRIVATE_TERMS`) appears in the repository.
+
 ### Changed
 - Code comments, a test fixture and the 0.5.0 changelog entry used commands from a consuming project as examples; they now use neutral ones (`mytool --user <name or id> list`). No behaviour change.
 

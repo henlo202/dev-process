@@ -14,3 +14,4 @@
 2. **The process follows itself.** Changes to this repository go through a light version of the process (see [change process](change-process.md)).
 3. **Explicit beats implicit.** Deviations are recorded as waivers, and decisions as PDRs.
 4. **Tool neutral.** The core never depends on a specific agent product ([PDR-0001](decisions/PDR-0001-tool-neutral.md)).
+5. **Project neutral.** Nothing here names or describes a project that uses the process ([PDR-0009](decisions/PDR-0009-project-neutral.md)). See [project neutrality](change-process.md#project-neutrality).

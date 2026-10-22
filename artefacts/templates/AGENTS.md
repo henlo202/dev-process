@@ -76,4 +76,7 @@ changing `core.hooksPath`, `DEV_PROCESS_OWNER_OVERRIDE`).
 - Update the relevant docs and `CHANGELOG.md` (Unreleased) in the same change.
 - All artefacts are written in English.
 - If this file is wrong or out of date, fix it as part of your task.
+- A change to dev-process itself is proposed in the dev-process repository, in
+  neutral terms: never copy this project's names, commands, paths, IDs or data
+  into it.
 - When requirements, design and the task conflict, stop and ask.
