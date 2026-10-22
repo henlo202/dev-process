@@ -1,6 +1,6 @@
 # PDR-0009: The process is project neutral
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-22
 
 ## Context
