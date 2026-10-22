@@ -39,10 +39,10 @@ def test_runs_locally():
 
 # Angle brackets inside inline code and fenced blocks are syntax, not template placeholders.
 CODE_SNIPPETS = """
-Run `garmin-sync --player <name or id> recent`.
+Run `mytool --user <name or id> list`.
 
 ```
-auth.py --player <player id>
+login.py --user <user id>
 ```
 """
 
@@ -93,7 +93,7 @@ class RequirementPrefixes(unittest.TestCase):
         text = self.report()
         self.assertIn("placeholder:docs/brief.md", text)  # the template's own placeholders remain
         self.assertNotIn("<name or id>", text)
-        self.assertNotIn("<player id>", text)
+        self.assertNotIn("<user id>", text)
 
     def test_invalid_prefixes_fall_back_to_the_default(self):
         self.set_prefixes("[sys, 'A-B']")
