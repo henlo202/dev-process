@@ -11,6 +11,9 @@ All notable changes to dev-process are documented here. The format follows
 - **Project neutrality** ([PDR-0009](governance/decisions/PDR-0009-project-neutral.md)): the process must not name or describe any project that uses it. The rule is in the ownership principles, the change process (draft and review steps), `AGENTS.md` and the project `AGENTS.md` template.
 - `tooling/validate.py` fails when a term from a private list (`.private-terms`, git-ignored, or `DEV_PROCESS_PRIVATE_TERMS`) appears in the repository.
 
+### Changed
+- Code comments, a test fixture and the 0.5.0 changelog entry used commands from a consuming project as examples; they now use neutral ones (`mytool --user <name or id> list`). No behaviour change.
+
 ## [0.5.0] - 2026-10-19
 Guardrails now work on **Windows**, and projects can use their own **requirement ID prefixes**.
 
@@ -23,7 +26,7 @@ Guardrails now work on **Windows**, and projects can use their own **requirement
 ### Fixed
 - Git hooks, CI scripts and the Claude Code hook called `python3` directly. On Windows that is often the Microsoft Store alias, which does not run Python, so every commit was refused and the Claude hook never checked anything.
 - When the first Python on PATH had no PyYAML, the guardrails fell back to their defaults (warn mode) even in `block` projects; a Python with PyYAML is now preferred.
-- Text in inline code (for example `` `--player <name or id>` ``) was reported as an unfilled template placeholder; inline code is now skipped like fenced code, in `check.py` and `status.py`.
+- Text in inline code (for example `` `--user <name or id>` ``) was reported as an unfilled template placeholder; inline code is now skipped like fenced code, in `check.py` and `status.py`.
 - The tools crashed on Windows when printing ✔, ✖ or ❌ to a non-UTF-8 console or pipe; their output is now UTF-8.
 
 ### Changed
