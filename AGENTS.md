@@ -20,5 +20,6 @@ python examples/greeter-cli/.process/check.py --project examples/greeter-cli
 - Changes to gates, required artefacts, tiers, autonomy or governance need a PDR in `governance/decisions/`.
 - Bump `process.version` and add a `CHANGELOG.md` entry following `governance/versioning.md`.
 - English only. Keep documents short; link instead of repeating.
+- Project neutral: never name or describe a project that uses the process, even when the change was found there. Invent generic examples. See [project neutrality](governance/change-process.md#project-neutrality).
 - Agents may propose changes via PRs but never merge. Only the Owner merges.
 - `tooling/check.py` must stay dependency-light (stdlib plus PyYAML) and must exit 0 unless `--strict` is given.

@@ -13,11 +13,26 @@ Proposal ─► Draft PR ─► Reviewer agent summary ─► Owner decision ─
 ```
 
 1. **Propose.** Open an issue (or a draft PR) stating the problem, with evidence such as a retrospective, a repeated waiver or a confusing step.
-2. **Draft.** Change the Markdown and `process.yaml` together. For any change that alters a gate, a required artefact, a tier rule or governance itself, add a **process decision record (PDR)** in `governance/decisions/`.
+2. **Draft.** Change the Markdown and `process.yaml` together. Keep the change [project neutral](#project-neutrality). For any change that alters a gate, a required artefact, a tier rule or governance itself, add a **process decision record (PDR)** in `governance/decisions/`.
 3. **Validate.** CI runs `tooling/validate.py` (schema, cross-references, links) and builds the site.
-4. **Review.** A Reviewer agent summarises the impact: which projects are affected, and whether the change is major, minor or patch.
+4. **Review.** A Reviewer agent summarises the impact: which projects are affected, and whether the change is major, minor or patch. It also confirms the change is [project neutral](#project-neutrality); any project-specific content is a blocker.
 5. **Decide.** The Owner merges or closes the PR.
 6. **Release.** Update `CHANGELOG.md`, bump `process.version` per [versioning](versioning.md), and tag `vX.Y.Z`.
+
+## Project neutrality
+This repository serves every project and is public, so it must not name or
+describe any of them ([PDR-0009](decisions/PDR-0009-project-neutral.md)).
+
+- **Never include** a project's name, domain terms, commands, file paths,
+  requirement IDs, people or data, in docs, code, comments, tests, examples,
+  commit messages or changelog entries.
+- **Invent examples.** Use generic ones (`mytool --user <name or id> list`) or
+  the [worked example](../examples/greeter-cli/README.md).
+- **Changes found in a project** are restated in neutral terms: describe the
+  problem, then rewrite every example from the project before it lands here.
+- **Check:** list your projects' distinctive terms in `.private-terms` at the
+  repository root (git-ignored, one per line) or in `DEV_PROCESS_PRIVATE_TERMS`
+  (comma-separated). `tooling/validate.py` then fails if any of them appears.
 
 ## What needs a PDR
 - Adding or removing a phase, gate or required artefact

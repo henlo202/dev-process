@@ -4,7 +4,8 @@
 Checks: process.yaml against its schema, cross-references between phases,
 gates, artefacts and roles, that every referenced file exists, that no process
 document is orphaned, that relative Markdown links resolve, and that the
-process version matches the latest CHANGELOG entry.
+process version matches the latest CHANGELOG entry, and that no private
+project term appears anywhere (PDR-0009).
 
 Exits 1 on any error. This strictness applies to the process repository only;
 project conformance remains warn-only (PDR-0003).
@@ -14,7 +15,9 @@ Requires: PyYAML, jsonschema.
 from __future__ import annotations
 
 import json
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -110,7 +113,36 @@ def main() -> int:
     if not m or m.group(1) != process["process"]["version"]:
         errors.append(f"CHANGELOG.md latest release {m.group(1) if m else 'none'} "
                       f"!= process.yaml version {process['process']['version']}")
+    errors += check_project_neutral()
     return report(errors)
+
+
+def private_terms() -> list[str]:
+    """Terms of consuming projects that must never appear here (PDR-0009); never committed."""
+    terms = os.environ.get("DEV_PROCESS_PRIVATE_TERMS", "").split(",")
+    path = ROOT / ".private-terms"
+    if path.is_file():
+        terms += path.read_text(encoding="utf-8").splitlines()
+    return sorted({t.strip().lower() for t in terms if t.strip() and not t.strip().startswith("#")})
+
+
+def check_project_neutral() -> list[str]:
+    terms = private_terms()
+    if not terms:
+        return []
+    files = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+                           cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+    errors = []
+    for rel in files:
+        try:
+            lines = (ROOT / rel).read_text(encoding="utf-8").lower().splitlines()
+        except (UnicodeDecodeError, OSError):
+            continue  # binary or unreadable
+        for n, line in enumerate(lines, 1):
+            for t in terms:
+                if t in line:
+                    errors.append(f"{rel}:{n}: private project term '{t}' (PDR-0009)")
+    return errors
 
 
 def validate_skills(process: dict, ids: dict) -> list[str]:

@@ -7,6 +7,10 @@ All notable changes to dev-process are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Project neutrality** ([PDR-0009](governance/decisions/PDR-0009-project-neutral.md)): the process must not name or describe any project that uses it. The rule is in the ownership principles, the change process (draft and review steps), `AGENTS.md` and the project `AGENTS.md` template.
+- `tooling/validate.py` fails when a term from a private list (`.private-terms`, git-ignored, or `DEV_PROCESS_PRIVATE_TERMS`) appears in the repository.
+
 ## [0.5.0] - 2026-10-19
 Guardrails now work on **Windows**, and projects can use their own **requirement ID prefixes**.
 
