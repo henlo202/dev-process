@@ -22,4 +22,5 @@ description: Critically review an artefact or pull request against its inputs be
 - Rank each finding as blocker, major, minor or nit. Be specific about the file, line and fix.
 - Check the standards in `docs/standards.md` that tooling does **not** enforce (naming, structure, error handling).
 - State what you did **not** check.
+- Review in proportion to the tier: read the diff, the brief and the files it touches, not the whole repository. T1 changes need no separate review. For T3, use a `deep` model, ideally a different one from the author's.
 - Do not approve. End with "ready / ready with fixes / not ready" as advice to the Owner.

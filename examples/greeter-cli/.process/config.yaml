@@ -1,5 +1,5 @@
 # Links this project to dev-process. Read by .process/check.py and by agents.
-process_version: "0.4.0"
+process_version: "0.5.0"
 project: "greeter-cli"
 tier: T2            # T1 | T2 | T3: highest tier of work currently expected
 test_paths:               # where to look for requirement IDs referenced by tests
@@ -14,6 +14,14 @@ guardrails:               # hard enforcement; see dev-process guides/guardrails.
   commit_pattern: '^(feat|fix|docs|test|refactor|perf|build|ci|chore|style|revert|spike)(\([^)]+\))?!?: .+'
   lint_command: "ruff check src tests && ruff format --check src tests"
   agent_blocked_commands: []   # regexes agent adapters refuse, e.g. deploy commands
+economy:                  # resource economy; see dev-process guides/resource-economy.md
+  models:                 # model classes -> the models your agent tool uses
+    deep:     {model: "opus", effort: high}
+    standard: {model: "sonnet", effort: medium}
+    fast:     {model: "haiku", effort: low}
+  budgets: {S: 10, M: 20, L: 35}   # agent steps per increment, by budget size
+  max_attempts: 2         # failed attempts at one step before escalating or stopping
+  agents_md_max_lines: 150         # keep the always-loaded context small
 waivers:
   - rule: untested-requirement:REQ-004
     reason: AC-004.1 (plain-language help text) is subjective and checked manually at G2.

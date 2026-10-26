@@ -29,7 +29,9 @@ own homework.
 | **Documenter** | P2, P4, P5 | User docs, runbook, changelog, release notes | Document behaviour that is not implemented |
 
 Each agent role has a matching skill, `dev-process-<role>` (see [agent skills](../agents/README.md)),
-which any agent can load to play that role.
+which any agent can load to play that role. Each role also has a default
+[model class](../guides/resource-economy.md) (`deep`, `standard` or `fast`), set in
+`process.yaml` and shown in the "Model classes" panel of the HTML site and on each skill's page.
 
 ## Who decides what
 

@@ -4,16 +4,20 @@
 |------|---------|
 | **Acceptance criterion (AC)** | A testable condition, in Given/When/Then form, that shows a requirement is met. ID `AC-nnn.m`. |
 | **ADR** | Architecture decision record: a short, immutable record of one significant decision. |
+| **Agent step** | One delegated unit of agent work (shaping, a review, a slice, a demo), including failed attempts. The unit of increment budgets. |
 | **Agent** | An AI system that performs work in a role (Analyst, Architect, …) under an autonomy level. |
 | **Artefact** | A standard document or output produced and used by the process. |
 | **Autonomy level** | A0–A3: what agents may do without asking. |
+| **Budget** | An increment's effort limit in agent steps (S, M, L or a number). When it is used up, the Owner decides how to go on. |
 | **Conformance check** | An automated check of a project against the process for its tier. It warns and never blocks. |
 | **Demo** | Evidence showing an increment's outcome working; the main input to G2. |
+| **Escalation** | Moving a step one model class up after repeated failed attempts, with the reason recorded. |
 | **Gate** | A human decision point (G0–G3), approved by the Owner. |
 | **Increment** | One small, demonstrable outcome that goes once round the loop (P1–P5). ID `INC-nnn`. |
 | **Increment brief** | The one-page description of an increment: outcome, scope, design notes, slices, demo, learnings. |
 | **Initiative** | A project or product owned by the Owner and run with this process. |
 | **Loop** | The repeating cycle P1 Shape → P2 Build → P3 Verify → P4 Release → P5 Learn. |
+| **Model class** | `deep`, `standard` or `fast`: an abstract capability level that each project maps to a real model. |
 | **NFR** | Non-functional requirement: a quality such as performance, security or accessibility. |
 | **Owner** | The single human who approves gates and owns the process. |
 | **PDR** | Process decision record: an ADR for the process itself. |

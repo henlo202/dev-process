@@ -5,7 +5,7 @@ description: Run a time-boxed, throwaway spike to answer one open question by bu
 # Run a spike (dev-process)
 
 ## Steps
-1. Write down **one question** and a **time-box** before starting (e.g. "Can SQLite serve 1M rows under 100 ms? 2 hours.").
+1. Write down **one question** and a **time-box**, in hours or agent steps, before starting (e.g. "Can SQLite serve 1M rows under 100 ms? 3 agent steps.").
 2. Create a `spike/<slug>` branch. Take shortcuts freely: no tests, no polish.
 3. Build or measure the smallest thing that answers the question. Compare options side by side when there are several.
 4. Stop at the time-box, even if the question is still open.

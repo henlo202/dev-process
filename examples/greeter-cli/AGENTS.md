@@ -7,7 +7,7 @@ A tiny CLI that prints a greeting in English or Swedish. It is the worked exampl
 for dev-process. Details are in `docs/brief.md`.
 
 ## Process
-This project follows **dev-process v0.1.0**, a standard process for
+This project follows **dev-process v0.5.0**, a standard process for
 AI-agentic development. The current tier is **T2**.
 
 - Process configuration: `.process/config.yaml`
@@ -25,6 +25,10 @@ AI-agentic development. The current tier is **T2**.
   new outcome, replies to a gate, or gives no specific task, use the
   `dev-process-orchestrator` skill. It runs `python .process/status.py` to find
   the next step, and stops only at gates.
+- **Resource economy:** use the model class `status.py` names for each step
+  (`economy.models` in `.process/config.yaml`). Keep handoffs and replies short,
+  read only what the step needs, and stop after `economy.max_attempts` failed
+  attempts instead of retrying. Keep this file short (under 150 lines).
 - Human gates (G0–G3) are approved only by the Owner. **Never** approve a
   gate, merge a pull request or deploy on your own.
 

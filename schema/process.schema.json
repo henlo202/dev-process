@@ -5,6 +5,7 @@
   "required": [
     "process",
     "tiers",
+    "model_classes",
     "roles",
     "phases",
     "gates",
@@ -59,6 +60,27 @@
         "doc": {
           "$ref": "#/$defs/doc"
         }
+      }
+    },
+    "modelClass": {
+      "enum": [
+        "deep",
+        "standard",
+        "fast"
+      ]
+    },
+    "tierModelClass": {
+      "type": "object",
+      "description": "Model class overrides for work of specific tiers",
+      "propertyNames": {
+        "enum": [
+          "T1",
+          "T2",
+          "T3"
+        ]
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/modelClass"
       }
     }
   },
@@ -123,6 +145,41 @@
         }
       }
     },
+    "model_classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "effort",
+          "doc",
+          "summary"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/modelClass"
+          },
+          "name": {
+            "type": "string"
+          },
+          "effort": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "doc": {
+            "$ref": "#/$defs/doc"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "roles": {
       "type": "array",
       "items": {
@@ -153,6 +210,13 @@
           },
           "summary": {
             "type": "string"
+          },
+          "model_class": {
+            "$ref": "#/$defs/modelClass",
+            "description": "agent roles: default model class"
+          },
+          "tier_model_class": {
+            "$ref": "#/$defs/tierModelClass"
           }
         }
       }
@@ -392,6 +456,13 @@
               "type": "string"
             },
             "uniqueItems": true
+          },
+          "model_class": {
+            "$ref": "#/$defs/modelClass",
+            "description": "task skills: default model class (role skills use their role's)"
+          },
+          "tier_model_class": {
+            "$ref": "#/$defs/tierModelClass"
           }
         }
       }

@@ -71,6 +71,34 @@
       "pattern": "^INC-\\d+$",
       "description": "increment only"
     },
+    "budget": {
+      "anyOf": [
+        {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ]
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ],
+      "description": "increment only: effort budget, a size (S/M/L, mapped to agent steps in .process/config.yaml) or a number of agent steps"
+    },
+    "spent": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "increment only: agent steps used so far (status.py log-step)"
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "increment only: model-class escalations and their reasons (status.py log-step --escalated)"
+    },
     "release": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
