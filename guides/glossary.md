@@ -4,8 +4,8 @@
 |------|---------|
 | **Acceptance criterion (AC)** | A testable condition, in Given/When/Then form, that shows a requirement is met. ID `AC-nnn.m`. |
 | **ADR** | Architecture decision record: a short, immutable record of one significant decision. |
-| **Agent step** | One delegated unit of agent work (shaping, a review, a slice, a demo), including failed attempts. The unit of increment budgets. |
 | **Agent** | An AI system that performs work in a role (Analyst, Architect, …) under an autonomy level. |
+| **Agent step** | One delegated unit of agent work (shaping, a review, a slice, a demo), including failed attempts. The unit of increment budgets. |
 | **Artefact** | A standard document or output produced and used by the process. |
 | **Autonomy level** | A0–A3: what agents may do without asking. |
 | **Budget** | An increment's effort limit in agent steps (S, M, L or a number). When it is used up, the Owner decides how to go on. |
