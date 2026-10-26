@@ -49,7 +49,7 @@ def main() -> int:
         return report(errors)
 
     ids = {k: {e["id"] for e in process[k]} for k in ("tiers", "roles", "phases", "gates", "artefacts")}
-    for kind in ("tiers", "roles", "phases", "gates", "artefacts", "guides", "governance"):
+    for kind in ("tiers", "model_classes", "roles", "phases", "gates", "artefacts", "guides", "governance"):
         seen = set()
         for e in process[kind]:
             if e["id"] in seen:
@@ -86,7 +86,7 @@ def main() -> int:
     errors += validate_skills(process, ids)
 
     referenced = set()
-    for kind in ("tiers", "roles", "phases", "gates", "artefacts", "guides", "governance", "skills"):
+    for kind in ("tiers", "model_classes", "roles", "phases", "gates", "artefacts", "guides", "governance", "skills"):
         for e in process[kind]:
             if not (ROOT / e["doc"]).is_file():
                 errors.append(f"{kind} {e['id']}: doc {e['doc']} not found")
@@ -178,9 +178,15 @@ def validate_skills(process: dict, ids: dict) -> list[str]:
         for b in sk["bundle"]:
             if not (ROOT / b).is_file():
                 errors.append(f"skill {sk['id']}: bundled file {b} not found")
+        if sk["kind"] == "task" and "model_class" not in sk:
+            errors.append(f"skill {sk['id']}: task skills need a model_class")
+        if sk["kind"] == "role" and ("model_class" in sk or "tier_model_class" in sk):
+            errors.append(f"skill {sk['id']}: role skills take their model class from the role")
     for role in process["roles"]:
         if role["kind"] == "agent" and role["id"] not in covered_roles:
             errors.append(f"agent role {role['id']} has no role skill")
+        if (role["kind"] == "agent") != ("model_class" in role):
+            errors.append(f"role {role['id']}: agent roles, and only agent roles, need a model_class")
     return errors
 
 

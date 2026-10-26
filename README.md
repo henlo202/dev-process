@@ -24,6 +24,7 @@ P0 Initiate ─G0─►  ┌─► P1 Shape ─G1─► P2 Build ─► P3 Verif
 - **Stay small:** a [size limit](guides/increments.md#size-limit) per increment, checked automatically.
 - **Enforce what matters:** coding standards, branching and "never" rules are enforced by [guardrails](guides/guardrails.md), not just written down.
 - **Scale by risk:** T1 Trivial changes skip shaping, and T3 Major increments add design scrutiny at G1. See [risk tiers](guides/risk-tiers.md).
+- **Spend wisely:** each step runs on the smallest suitable model class (`deep`, `standard`, `fast`), each increment has a budget, and agents stop instead of looping. See [resource economy](guides/resource-economy.md).
 
 | Folder | Contents |
 |--------|----------|
@@ -33,7 +34,7 @@ P0 Initiate ─G0─►  ┌─► P1 Shape ─G1─► P2 Build ─► P3 Verif
 | [`roles/`](roles/roles.md) | The Owner and the agent roles |
 | [`agents/`](agents/README.md) | Agent **skills** (`SKILL.md` format): one per role, plus task skills |
 | [`adapters/`](adapters/claude/README.md) | Optional agent-tool integrations (Claude Code) |
-| [`guides/`](guides/) | Increments, spikes, requirements, QA, documentation, security, tiers, autonomy, glossary |
+| [`guides/`](guides/) | Increments, spikes, requirements, QA, documentation, security, tiers, autonomy, resource economy, glossary |
 | [`governance/`](governance/ownership.md) | How the process itself is owned, changed, versioned and adopted |
 | [`tooling/`](tooling/) | `scaffold.py`, `check.py` (conformance), `guardrails/` (enforcement), `validate.py`, CI snippets |
 | [`site/`](site/) | HTML site generator |
@@ -60,6 +61,10 @@ Open your agent tool in the project and say **"continue"**. The
 comes next, runs it, and stops only when you need to decide at a gate. You
 state outcomes ("next, users should export CSV") and reply to gates
 ("approved"); everything in between runs on its own.
+
+To save quota, run your main session on a mid-tier model: the orchestrator
+delegates design and T3 reviews to subagents on stronger models, and mechanical
+work to cheaper ones (`economy.models` in `.process/config.yaml`).
 
 ## Using it with agents
 Point any agent at the project's `AGENTS.md`. Agent instructions are **skills**

@@ -17,6 +17,7 @@ The conformance checker and agents read it.
 | `increment_limits` | Size limits per increment (warn only). See [increments](../guides/increments.md#size-limit). |
 | `guardrails` | Hard enforcement settings. See [guardrails](../guides/guardrails.md). |
 | `adapters` | Installed agent-tool adapters, refreshed on upgrade. |
+| `economy` | `models` (model class → model and effort), `budgets` (agent steps per S/M/L), `max_attempts`, `agents_md_max_lines`. See [resource economy](../guides/resource-economy.md). |
 | `waivers` | A list of deliberate deviations. See [waivers](../governance/waivers.md). |
 
 The scaffolder also copies a snapshot of `process.yaml` and the checker into

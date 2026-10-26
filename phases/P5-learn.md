@@ -18,7 +18,7 @@ active initiative.
 |---|-----|------|
 | 1 | Owner / agents | Watch the signals defined in the runbook (errors, latency, usage). Handle incidents with the runbook, and add a post-incident note afterwards. |
 | 2 | Owner | Check the increment's outcome against what the brief expected. Did it achieve what you wanted? |
-| 3 | Owner | Write two or three lines in the increment brief's **Learnings** section. For longer retrospectives, use the [retrospective](../artefacts/retrospective.md) template. Agents can draft it from PR history. |
+| 3 | Owner | Write two or three lines in the increment brief's **Learnings** section, ending with a [resource line](../guides/resource-economy.md#4-measure-and-learn) (budget used, escalations, what cost the most). For longer retrospectives, use the [retrospective](../artefacts/retrospective.md) template. Agents can draft it from PR history. |
 | 4 | Owner | Route each learning: into the next increment's shaping (back to [P1](P1-shape.md)), into `AGENTS.md`, or into a [process change proposal](../governance/change-process.md). |
 
 ## Exit criteria

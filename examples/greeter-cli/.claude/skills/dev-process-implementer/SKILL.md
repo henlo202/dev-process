@@ -14,13 +14,14 @@ description: Implement a task slice test-first on a feature branch, following th
 - **Commits:** follow the commit convention in `docs/standards.md` (default Conventional Commits, e.g. `feat: export CSV (REQ-007)`).
 - **Guardrails:** git hooks in `.process/guardrails/` enforce these rules. If a hook rejects something, fix the cause. **Never** bypass a hook (`--no-verify`, changing `core.hooksPath`, owner-override variables).
 - **Tests:** never weaken, skip or delete a test to make it pass without saying so in the PR.
+- **Economy:** run the affected tests while working and the full suite once before the PR; make targeted edits instead of rewriting files; search instead of reading whole large files. After `economy.max_attempts` failed attempts at the same problem, stop and report (or escalate one model class, recorded with `status.py log-step --escalated`), never keep retrying.
 
 ## Steps
 1. Make sure the hooks are installed: `git config core.hooksPath .process/guardrails/git-hooks`.
 2. Create the branch, e.g. `git switch -c task/INC-004-S2-export-csv`.
 3. Write failing tests for each AC first, with the requirement ID in the test name or a comment.
 4. Implement the minimum code to pass, then refactor.
-5. Run the full test suite and the lint command. Commit in small steps.
+5. Run the full test suite (once, at the end of the slice) and the lint command. Commit in small steps.
 6. Update the docs and the `CHANGELOG.md` Unreleased section (or hand over to the documenter).
 7. Run `python .process/check.py` and fix any new findings.
 8. Tick the slice (`- [x] S2: …`) in the increment brief, in the same PR. `.process/status.py` uses the ticks to pick the next slice.

@@ -179,6 +179,20 @@ class Site:
             out.append(self.panel(rows, title))
         return "".join(out), ""
 
+    def model_class_html(self, entry) -> str:
+        if not entry.get("model_class"):
+            return '<span class="muted">—</span>'
+        out = f'<code>{esc(entry["model_class"])}</code>'
+        for tier, cls in (entry.get("tier_model_class") or {}).items():
+            out += f' <span class="muted">· {esc(tier)}:</span> <code>{esc(cls)}</code>'
+        return out
+
+    def roles_panel(self, here):
+        guide = rel(here, page_path("guides/resource-economy.md"))
+        rows = [(r["name"], self.model_class_html(r)) for r in self.p["roles"] if r["kind"] == "agent"]
+        title = f'<div class="panel-title"><a href="{guide}">Model classes</a></div>'
+        return self.panel(rows, title)
+
     def skill_panel(self, sk, here):
         text = (ROOT / sk["doc"]).read_text(encoding="utf-8")
         fm = yaml.safe_load(text.split("\n---", 1)[0].lstrip("-")) or {}
@@ -189,6 +203,8 @@ class Site:
             ("Kind", "role skill" if sk["kind"] == "role" else "task skill"),
             ("Role", self.link(here, "roles", sk["role"]) if sk["role"] else '<span class="muted">any</span>'),
             ("Phases", self.links(here, "phases", sk["phases"])),
+            ("Model class", self.model_class_html(
+                next(r for r in self.p["roles"] if r["id"] == sk["role"]) if sk["role"] else sk)),
             ("Bundled", bundle or '<span class="muted">—</span>'),
             ("In a project", f"<code>.process/skills/{esc(sk['id'])}/SKILL.md</code>"),
         ]
@@ -438,7 +454,7 @@ python tooling/scaffold.py ../my-project --upgrade</code></pre>
         for kind in ("guides", "governance"):
             for e in self.p[kind]:
                 self.doc_page(e["doc"])
-        self.doc_page("roles/roles.md")
+        self.doc_page("roles/roles.md", self.roles_panel(page_path("roles/roles.md")))
         self.doc_page("agents/README.md")
         for sk in self.skills:
             here = page_path(sk["doc"])

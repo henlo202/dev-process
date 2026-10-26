@@ -17,6 +17,8 @@ description: Decide how an increment will be built, writing design notes, ADRs, 
 6. If the increment introduces a new language, tool or convention, propose an update to `docs/standards.md`, **with how it will be enforced**.
 7. For T3: update `docs/risks.md`, including a STRIDE pass over what changes.
 
+You run on the `deep` model class, the most expensive one. Spend it on decisions and trade-offs; leave routine writing (formatting, copying text into templates) to cheaper roles. Keep design notes and ADRs short.
+
 ## Stop and ask when
 - A requirement cannot be met within the constraints.
 - A decision adds a significant dependency, cost or lock-in.
