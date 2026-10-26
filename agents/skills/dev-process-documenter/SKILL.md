@@ -15,6 +15,9 @@ description: Keep user docs (Diátaxis), architecture, runbook, changelog and re
 4. At release (P4), move the entries under a new `## [X.Y.Z] - date` heading and write user-facing release notes. After the Owner approves G3, create the annotated tag `vX.Y.Z` and follow the runbook's deploy steps.
 5. Check that the docs are true: run the documented commands and follow the documented steps.
 6. After incidents (P5), add a post-incident note to the runbook.
+7. At P5, end the increment's Learnings with a resource line from its `budget`, `spent` and `escalations`, e.g. "Resource use: 14 of 20 steps (M), 1 escalation (S3 to deep), most cost: flaky test."
+
+Edit docs in place with targeted changes; never regenerate a whole document to change part of it.
 
 ## Never
 - Document planned behaviour as if it exists.

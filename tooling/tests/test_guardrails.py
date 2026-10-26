@@ -199,6 +199,21 @@ class GuardrailsInRepo(unittest.TestCase):
         self.assertNotIn(old, commands)
         self.assertIn("mine", commands)  # the project's own hooks are kept
 
+    def test_claude_main_session_defaults_to_the_standard_model(self):
+        settings = self.repo / ".claude" / "settings.json"
+        self.assertEqual(json.loads(settings.read_text())["model"], "sonnet")
+        data = json.loads(settings.read_text())
+        data["model"] = "opus"
+        settings.write_text(json.dumps(data))
+        subprocess.run([sys.executable, str(ROOT / "tooling" / "scaffold.py"), str(self.repo), "--upgrade"],
+                       capture_output=True, check=True)
+        self.assertEqual(json.loads(settings.read_text())["model"], "opus", "an explicit choice is kept")
+        del data["model"]
+        settings.write_text(json.dumps(data))
+        subprocess.run([sys.executable, str(ROOT / "tooling" / "scaffold.py"), str(self.repo), "--upgrade"],
+                       capture_output=True, check=True)
+        self.assertEqual(json.loads(settings.read_text())["model"], "sonnet", "upgrades add it when missing")
+
 
 class CheckCommandUnit(unittest.TestCase):
     cfg = {**guard.DEFAULTS, "agent_blocked_commands": [r"\bterraform\s+apply\b"]}

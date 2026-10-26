@@ -48,6 +48,10 @@ When an increment exceeds the limit, the checker **warns**: split it. If the
 overrun is deliberate, accept it at G1 and add a waiver. The limits can be
 tuned per project in `.process/config.yaml`.
 
+Each increment also has an effort **budget** in agent steps (`budget: S | M | L`),
+approved at G1. When it is used up, the orchestrator stops and asks the Owner.
+See [resource economy](resource-economy.md#2-budgets-and-stop-loss).
+
 ## The first increments
 - **INC-001** is usually a *walking skeleton*: the thinnest end-to-end slice that builds, tests, deploys and can be demonstrated. It proves the toolchain before any feature work.
 - Shape the riskiest increment early. Learning that something is impossible is cheapest in week one.

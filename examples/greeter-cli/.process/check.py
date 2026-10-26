@@ -48,6 +48,8 @@ STATUS_LINE = re.compile(r"\*\*Status:\*\*\s*([a-z-]+)", re.IGNORECASE)
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SLICE = re.compile(r"^\s*[-*]\s+(?:\[[ xX]\]\s+)?S\d+\b", re.MULTILINE)
 DEFAULT_LIMITS = {"max_requirements": 5, "max_slices": 8}
+DEFAULT_BUDGETS = {"S": 10, "M": 20, "L": 35}
+DEFAULT_AGENTS_MD_LINES = 150
 # Template placeholders such as "<short title>" (contain a space, no attributes).
 PLACEHOLDER = re.compile(r"<(?!!--)[A-Za-z][^<>=\"`\n]*\s[^<>=\"`\n]*>")
 # Code is never a placeholder: fenced blocks and inline spans such as `--user <name or id>`.
@@ -114,6 +116,8 @@ def validate_frontmatter(rel: str, fm: dict, expected: str, report: Report):
             problems.append("`increment` must be an ID like `INC-001`")
         if not isinstance(fm.get("requirements"), list):
             problems.append("`requirements` must be a list of requirement IDs (may be empty)")
+        if "spent" in fm and not (isinstance(fm["spent"], int) and fm["spent"] >= 0):
+            problems.append("`spent` must be a whole number of agent steps")
     if problems:
         report.add(
             f"frontmatter-invalid:{rel}", WARNING,
@@ -312,8 +316,9 @@ def load_increments(root: Path) -> list[dict]:
     return increments
 
 
-def check_increments(increments: list[dict], reqs: dict, config: dict, report: Report):
+def check_increments(increments: list[dict], reqs: dict, config: dict, tier: str, report: Report):
     limits = {**DEFAULT_LIMITS, **(config.get("increment_limits") or {})}
+    budgets = {**DEFAULT_BUDGETS, **((config.get("economy") or {}).get("budgets") or {})}
     seen = {}
     for inc in increments:
         iid, rel = str(inc.get("increment", "?")), inc["_file"]
@@ -339,6 +344,23 @@ def check_increments(increments: list[dict], reqs: dict, config: dict, report: R
                 report.add(f"unknown-requirement:{rid}", WARNING,
                            f"Increment `{iid}` lists `{rid}`, which is not defined in `docs/requirements/`.",
                            "Fix the ID or add the requirement.", "guides/requirements.md")
+        budget = inc.get("budget")
+        limit = budget if isinstance(budget, int) else budgets.get(str(budget))
+        if budget is None:
+            if tier != "T1" and inc.get("status") in ("in-review", "approved", "in-progress"):
+                report.add(f"budget-missing:{iid}", WARNING,
+                           f"Increment `{iid}` ({rel}) has no effort budget, so runaway agent work is not caught.",
+                           "Set `budget: S|M|L` (or a number of agent steps) in its frontmatter while shaping.",
+                           "guides/resource-economy.md")
+        elif not isinstance(limit, int):
+            report.add(f"budget-invalid:{iid}", WARNING,
+                       f"Increment `{iid}` has budget `{budget}`, which is not one of {sorted(budgets)} or a number.",
+                       "Fix the `budget` field, or add the size to `economy.budgets`.", "guides/resource-economy.md")
+        elif int(inc.get("spent") or 0) > limit:
+            report.add(f"budget-exceeded:{iid}", WARNING,
+                       f"Increment `{iid}` used {inc.get('spent')} agent steps, over its budget of {limit} ({budget}).",
+                       "Ask the Owner to extend the budget (`status.py set-budget`), cut scope or stop. "
+                       "Note the cause in the Learnings.", "guides/resource-economy.md")
         if inc.get("status") == "done" and len(section(inc["_text"], "Demo")) < 20:
             report.add(f"demo-missing:{iid}", WARNING,
                        f"Increment `{iid}` is `done` but its Demo section has no evidence.",
@@ -409,6 +431,33 @@ def check_guardrails(root: Path, config: dict, tier: str, report: Report):
                        "Guardrail git hooks are not installed in this clone.",
                        "Run `git config core.hooksPath .process/guardrails/git-hooks`.",
                        "guides/guardrails.md")
+
+
+def check_economy(root: Path, config: dict, report: Report):
+    economy = config.get("economy")
+    if economy is None:
+        report.add("economy-not-configured", WARNING,
+                   "`.process/config.yaml` has no `economy` section, so agents cannot tell which model to use.",
+                   "Run `scaffold.py --upgrade` to add it, then map the model classes to your tool's models.",
+                   "guides/resource-economy.md")
+        return
+    models = economy.get("models") or {}
+    unmapped = [c for c in ("deep", "standard", "fast") if not str((models.get(c) or {}).get("model") or "").strip()]
+    if unmapped:
+        report.add("models-not-configured", WARNING,
+                   f"Model class(es) {', '.join(f'`{c}`' for c in unmapped)} are not mapped to a model, so every "
+                   "step tends to run on the most capable (and most expensive) model.",
+                   "Set `economy.models.<class>.model` to the models your agent tool uses.",
+                   "guides/resource-economy.md")
+    agents = root / "AGENTS.md"
+    limit = int(economy.get("agents_md_max_lines") or DEFAULT_AGENTS_MD_LINES)
+    if agents.is_file():
+        lines = len(agents.read_text(encoding="utf-8", errors="replace").splitlines())
+        if lines > limit:
+            report.add("agents-context-too-long", WARNING,
+                       f"`AGENTS.md` has {lines} lines (limit {limit}). It is loaded into every agent session.",
+                       "Move details into linked docs or skills and keep only what every task needs.",
+                       "guides/resource-economy.md")
 
 
 def apply_waivers(config: dict, report: Report, today: dt.date):
@@ -530,9 +579,10 @@ def main(argv=None) -> int:
     check_artefacts(root, process, tier, report)
     reqs = check_traceability(root, config, report)
     increments = load_increments(root)
-    check_increments(increments, reqs, config, report)
+    check_increments(increments, reqs, config, tier, report)
     check_gates(root, tier, increments, report)
     check_guardrails(root, config, tier, report)
+    check_economy(root, config, report)
     apply_waivers(config, report, dt.date.today())
 
     text = render(report, config.get("project", root.name), tier,

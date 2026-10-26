@@ -13,7 +13,7 @@ decision rests first on the **demo**: you see the outcome working.
 - [ ] CI is green: tests, lint, static analysis, security scans.
 - [ ] Every conformance warning is fixed or covered by a waiver.
 - [ ] Every requirement touched by this change has a passing test (see the traceability report).
-- [ ] I read the reviewer summary, and every finding is fixed or answered.
+- [ ] I read the reviewer summary, and every finding is fixed or answered. (T2/T3; T1 changes have no separate review step, see [resource economy](../guides/resource-economy.md#3-context-economy).)
 - [ ] I skimmed the diff myself, with particular attention to tests that were changed or deleted.
 - [ ] No spike code was merged.
 - [ ] Docs are updated: user, technical, runbook, changelog.

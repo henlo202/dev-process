@@ -30,6 +30,8 @@ ROOT = Path(__file__).resolve().parent.parent
 ADAPTERS = ("claude",)
 # Hook commands written by earlier versions; upgraded in place because they assumed `python3`.
 OLD_CLAUDE_HOOK_COMMANDS = ['python3 "$CLAUDE_PROJECT_DIR/.process/adapters/claude/pre_tool_use.py"']
+# Default model per model class for adapters that know their tool's models.
+ADAPTER_MODELS = {"claude": {"deep": "opus", "standard": "sonnet", "fast": "haiku"}}
 
 # Where to put the first file when an artefact's path is a folder.
 FOLDER_SEEDS = {
@@ -98,7 +100,7 @@ def refresh_process_dir(project: Path, process: dict):
     (dot / "README.md").write_text(
         "# .process\n\nManaged by dev-process `tooling/scaffold.py`. Everything here except "
         "`config.yaml` is overwritten on upgrade, so do not edit it by hand.\n\n"
-        "- `config.yaml`: this project's tier, limits, guardrails and waivers (yours to edit)\n"
+        "- `config.yaml`: this project's tier, limits, guardrails, model economy and waivers (yours to edit)\n"
         "- `process.yaml`: snapshot of the pinned process version\n"
         "- `check.py`: conformance checker (`python .process/check.py`, warns only)\n"
         "- `status.py`: current phase and next step (`python .process/status.py`)\n"
@@ -110,8 +112,16 @@ def refresh_process_dir(project: Path, process: dict):
     )
 
 
-def install_claude_subagents(process: dict, dest: Path):
-    """One Claude Code subagent per role skill, so each role runs in its own context."""
+def role_model(process: dict, config: dict, role_id: str) -> dict:
+    """The economy.models entry for a role's model class at the project's tier."""
+    role = next(r for r in process["roles"] if r["id"] == role_id)
+    tier = str(config.get("tier", "T2"))
+    cls = (role.get("tier_model_class") or {}).get(tier) or role["model_class"]
+    return ((config.get("economy") or {}).get("models") or {}).get(cls) or {}
+
+
+def install_claude_subagents(process: dict, dest: Path, config: dict):
+    """One Claude Code subagent per role skill, so each role runs in its own context and model class."""
     dest.mkdir(parents=True, exist_ok=True)
     for old in dest.glob("dev-process-*.md"):
         old.unlink()
@@ -121,8 +131,14 @@ def install_claude_subagents(process: dict, dest: Path):
         text = (ROOT / skill["doc"]).read_text(encoding="utf-8")
         description = yaml.safe_load(text.split("\n---", 1)[0].lstrip("-"))["description"]
         role = skill["role"].capitalize()
+        fm = {"name": skill["id"], "description": description}
+        mapped = role_model(process, config, skill["role"])
+        if mapped.get("model"):
+            fm["model"] = mapped["model"]
+        if mapped.get("effort"):
+            fm["effort"] = mapped["effort"]
         (dest / f"{skill['id']}.md").write_text(
-            "---\n" + yaml.safe_dump({"name": skill["id"], "description": description}, sort_keys=False, width=1000)
+            "---\n" + yaml.safe_dump(fm, sort_keys=False, width=1000, allow_unicode=True)
             + "---\n"
             f"You are the dev-process {role} agent for this project.\n\n"
             f"1. Read `AGENTS.md` and `docs/standards.md`.\n"
@@ -130,8 +146,10 @@ def install_claude_subagents(process: dict, dest: Path):
             "3. Respect the guardrails: feature branches only, the commit convention, lint before commit, "
             "and never bypass hooks.\n"
             "4. Do only the step you were given. Never approve a gate or merge.\n"
-            "5. Report back briefly: what you did, the files and commits you changed, and anything that needs "
-            "the Owner.\n",
+            "5. Read only what the step needs; search rather than reading whole large files.\n"
+            "6. If the step fails twice (`economy.max_attempts`), stop and report instead of trying again.\n"
+            "7. Report back in at most 15 lines: what you did, the files and commits you changed, and anything "
+            "that needs the Owner. No transcripts or full file contents.\n",
             encoding="utf-8")
 
 
@@ -147,25 +165,42 @@ def upgrade_claude_hook(current: dict, template: dict) -> bool:
     return changed
 
 
+def default_claude_model(settings: dict, config: dict) -> dict | None:
+    """Settings with the main-session model set to the `standard` class, or None if it is already set
+    (an explicit choice is kept) or the class is not mapped. The orchestrator runs there (PDR-0010)."""
+    model = (((config.get("economy") or {}).get("models") or {}).get("standard") or {}).get("model")
+    if not model or "model" in settings:
+        return None
+    return {"model": model, **settings}
+
+
 def install_adapter(name: str, project: Path, process: dict, created: list, skipped: list):
     if name == "claude":
         src = ROOT / "adapters" / "claude"
         install_skills(process, project / ".claude" / "skills")
         created.append(".claude/skills/dev-process-* (refreshed)")
         write_new(project / "CLAUDE.md", (src / "CLAUDE.md").read_text(encoding="utf-8"), created, skipped, project)
-        install_claude_subagents(process, project / ".claude" / "agents")
+        config = yaml.safe_load((project / ".process" / "config.yaml").read_text(encoding="utf-8")) or {}
+        install_claude_subagents(process, project / ".claude" / "agents", config)
         created.append(".claude/agents/dev-process-* (refreshed)")
         settings = project / ".claude" / "settings.json"
+        template = json.loads((src / "settings.json").read_text(encoding="utf-8"))
         if settings.exists():
             current = json.loads(settings.read_text(encoding="utf-8") or "{}")
-            if upgrade_claude_hook(current, json.loads((src / "settings.json").read_text(encoding="utf-8"))):
-                settings.write_text(json.dumps(current, indent=2) + "\n", encoding="utf-8")
+            hook_updated = upgrade_claude_hook(current, template)
+            with_model = default_claude_model(current, config)
+            if hook_updated or with_model:
+                settings.write_text(json.dumps(with_model or current, indent=2) + "\n", encoding="utf-8")
+            if hook_updated:
                 created.append(".claude/settings.json (PreToolUse hook command updated)")
-            elif "pre_tool_use" not in json.dumps(current):
+            if with_model:
+                created.append(f".claude/settings.json (default model set to `{with_model['model']}`)")
+            if not hook_updated and "pre_tool_use" not in json.dumps(current):
                 skipped.append(".claude/settings.json (exists: add the PreToolUse hook from "
                                ".process/adapters/claude/settings.json by hand)")
         else:
-            write_new(settings, (src / "settings.json").read_text(encoding="utf-8"), created, skipped, project)
+            write_new(settings, json.dumps(default_claude_model(template, config) or template, indent=2) + "\n",
+                      created, skipped, project)
 
 
 def record_adapters(project: Path, adapters: list[str]):
@@ -200,6 +235,27 @@ def ensure_guardrails_config(project: Path, mode: str = "warn") -> bool:
     return True
 
 
+def model_values(adapters: list[str]) -> dict:
+    models = next((ADAPTER_MODELS[a] for a in adapters if a in ADAPTER_MODELS), {})
+    return {f"model_{c}": models.get(c, "") for c in ("deep", "standard", "fast")}
+
+
+def ensure_economy_config(project: Path, adapters: list[str]) -> bool:
+    """Add an economy section to an existing config.yaml that predates v0.6.0."""
+    path = project / ".process" / "config.yaml"
+    text = path.read_text(encoding="utf-8")
+    if (yaml.safe_load(text) or {}).get("economy") is not None:
+        return False
+    template = (ROOT / "artefacts" / "templates" / "process-config.yaml").read_text(encoding="utf-8")
+    block = re.search(r"^economy:.*?(?=^waivers:)", template, re.MULTILINE | re.DOTALL).group(0)
+    for key, val in model_values(adapters).items():
+        block = block.replace("{{" + key + "}}", val)
+    text = re.sub(r"^waivers:", block + "waivers:", text, count=1, flags=re.MULTILINE) \
+        if re.search(r"^waivers:", text, re.MULTILINE) else text.rstrip("\n") + "\n" + block
+    path.write_text(text, encoding="utf-8")
+    return True
+
+
 def install_hooks(project: Path):
     if not (project / ".git").exists():
         print("  (not a git repository yet: run `git init`, then "
@@ -213,7 +269,7 @@ def adopt(project: Path, name: str, tier: str, guardrails: str, adapters: list[s
     process = load_process()
     version = process["process"]["version"]
     values = {"project": name, "tier": tier, "date": dt.date.today().isoformat(),
-              "process_version": version, "guardrails_mode": guardrails}
+              "process_version": version, "guardrails_mode": guardrails, **model_values(adapters)}
     created, skipped = [], []
 
     project.mkdir(parents=True, exist_ok=True)
@@ -256,7 +312,7 @@ def adopt(project: Path, name: str, tier: str, guardrails: str, adapters: list[s
     if hooks:
         install_hooks(project)
     print("\nNext: fill in docs/brief.md, docs/standards.md and AGENTS.md (phase P0); set "
-          "guardrails.lint_command in .process/config.yaml; then run: python .process/check.py")
+          "guardrails.lint_command and economy.models in .process/config.yaml; then run: python .process/check.py")
 
 
 def upgrade(project: Path, adapters: list[str], hooks: bool):
@@ -271,12 +327,16 @@ def upgrade(project: Path, adapters: list[str], hooks: bool):
     config_path.write_text(text, encoding="utf-8")
     refresh_process_dir(project, process)
     added = ensure_guardrails_config(project)
+    known = record_adapters(project, adapters)
+    economy_added = ensure_economy_config(project, known)
     created, skipped = [], []
-    for adapter in record_adapters(project, adapters):
+    for adapter in known:
         install_adapter(adapter, project, process, created, skipped)
     print(f"Upgraded {project} from dev-process v{old} to v{version}.")
     if added:
         print("  + guardrails section added to .process/config.yaml (mode: warn)")
+    if economy_added:
+        print("  + economy section added to .process/config.yaml (map the model classes to your models)")
     for rel in created:
         print(f"  + {rel}")
     for rel in skipped:

@@ -7,12 +7,39 @@ All notable changes to dev-process are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-26
+**Resource economy** ([PDR-0010](governance/decisions/PDR-0010-resource-economy.md)): each step runs on the smallest suitable model, increments have a budget, agents stop instead of looping, and context stays small. The process stays tool- and model-neutral.
+
 ### Added
+- **Model classes** `deep`, `standard` and `fast` in `process.yaml` (`model_classes`). Each agent role and task skill has a default class (`model_class`), with per-tier overrides (`tier_model_class`): the architect is `deep`; the analyst and reviewer become `deep` at T3; the implementer and tester drop to `fast` at T1; the documenter is `fast`; the rest are `standard`.
+- **`economy` section** in `.process/config.yaml`: `models` (class → model and effort), `budgets` (agent steps for S/M/L), `max_attempts`, `agents_md_max_lines`.
+- **`status.py`** names `model_class`, `model` and `effort` for every agent step, and shows the increment's budget.
+- **Budgets and stop-loss:** increment frontmatter `budget`, `spent` and `escalations`. `status.py log-step` counts steps and records escalations. When the budget is used up, the next step is the Owner's. `status.py set-budget` changes a budget on the Owner's verbatim word.
+- **Conformance checks** (warn only): `economy-not-configured`, `models-not-configured`, `budget-missing`, `budget-invalid`, `budget-exceeded`, `agents-context-too-long`.
+- **Claude Code adapter:** maps the classes to `opus`, `sonnet` and `haiku`, writes `model` and `effort` into each subagent from its role's class, and makes the `standard` model the main session's default in `.claude/settings.json` (an existing `model` setting is kept).
+- Guide: [Resource economy](guides/resource-economy.md). Glossary entries for agent step, budget, escalation and model class.
+- The site shows model classes on each skill page and on the Roles page.
+- Tests for model-class resolution, budgets, `log-step` and `set-budget`.
 - **Project neutrality** ([PDR-0009](governance/decisions/PDR-0009-project-neutral.md)): the process must not name or describe any project that uses it. The rule is in the ownership principles, the change process (draft and review steps), `AGENTS.md` and the project `AGENTS.md` template.
 - `tooling/validate.py` fails when a term from a private list (`.private-terms`, git-ignored, or `DEV_PROCESS_PRIVATE_TERMS`) appears in the repository.
 
 ### Changed
+- **G2 for T1:** the reviewer summary is now evidence for T2/T3 only. T1 changes rest on CI and the Owner's merge.
+- Orchestrator skill: compact step briefs, step counting, one escalation then a "stuck" brief, batched questions, and a fresh session after each gate.
+- Skills: proportional tests (implementer, tester), proportional reviews (reviewer), edit-don't-regenerate and the Learnings resource line (documenter), budget proposal (planner, shaping), spike time-boxes in agent steps.
+- Subagents reply in at most 15 lines and stop after `max_attempts`.
+- G1 checklist: the budget and tier fit the work. The risk tiers table gains reviews, models and budget rows.
+- Templates: `AGENTS.md` gains a resource-economy bullet; the increment brief gains `tier`, `budget`, `spent`, `escalations` and a resource line in Learnings; `process-config.yaml` gains `economy`.
+- Subagent descriptions keep non-ASCII characters readable.
 - Code comments, a test fixture and the 0.5.0 changelog entry used commands from a consuming project as examples; they now use neutral ones (`mytool --user <name or id> list`). No behaviour change.
+
+### Upgrade (from 0.5.0)
+1. Run `python <dev-process>/tooling/scaffold.py <project> --upgrade`. It adds the `economy` section to `.process/config.yaml` (filled in for Claude Code if that adapter is installed) and regenerates subagents with their models.
+2. If you do not use the Claude adapter, map `economy.models` to your tool's models.
+3. Add the resource-economy bullet from `.process/templates/AGENTS.md` to your `AGENTS.md`.
+4. Add `tier` and `budget` (and `spent: 0`) to increments that are not yet `done`.
+5. Run your main agent session on your `standard` model (with the Claude adapter, the upgrade sets this unless `.claude/settings.json` already names a model).
+6. Run `python .process/check.py` and `python .process/status.py`.
 
 ## [0.5.0] - 2026-10-19
 Guardrails now work on **Windows**, and projects can use their own **requirement ID prefixes**.

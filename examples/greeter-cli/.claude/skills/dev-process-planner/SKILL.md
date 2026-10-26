@@ -16,3 +16,4 @@ description: Write an increment brief, with a single outcome, the requirement ID
 5. Check the size limit in `.process/config.yaml` (`increment_limits`). If it is exceeded, propose a split.
 6. Describe how the outcome will be demonstrated. The Demo section starts as a plan and is filled with evidence in P3.
 7. Check every slice against the Definition of Ready: requirement IDs named, small, dependencies clear, no open questions.
+8. Set the frontmatter `tier` and propose a `budget` (S, M or L, sized in agent steps in `economy.budgets`): roughly shaping and review, plus one step per slice, plus the demo, plus slack for retries. The Owner approves it at G1.

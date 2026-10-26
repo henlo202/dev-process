@@ -3,6 +3,10 @@ artefact: increment
 increment: INC-001
 status: draft
 requirements: []
+tier: {{tier}}
+budget: M                # S | M | L or a number of agent steps; set while shaping, approved at G1
+spent: 0                 # agent steps used; updated by .process/status.py log-step
+escalations: []
 owner: Planner agent
 updated: {{date}}
 ---
@@ -30,4 +34,5 @@ updated: {{date}}
 <!-- Filled in at P3: link or paste the evidence that each acceptance criterion works. -->
 
 ## Learnings
-<!-- Filled in at P5: two or three lines. Route actions to the next increment, AGENTS.md or a process change. -->
+<!-- Filled in at P5: two or three lines. Route actions to the next increment, AGENTS.md or a process change.
+     End with one resource line, e.g. "Resource use: 14 of 20 steps (M), 1 escalation (S3 to deep), most cost: flaky test." -->

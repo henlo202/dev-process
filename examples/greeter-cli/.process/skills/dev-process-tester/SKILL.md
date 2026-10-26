@@ -14,6 +14,7 @@ description: Derive automated tests from acceptance criteria, name them after re
 3. For bugs, write a failing reproduction test first.
 4. In P3, run `python .process/check.py` and read the traceability section. Add tests for requirements in scope that have none.
 5. Report what could not be automated, and why.
+6. While iterating, run only the affected tests and show only the failures; run the full suite once at the end.
 
 ## Never
 - Count spike results as test coverage.

@@ -158,6 +158,44 @@ class StatusLifecycle(unittest.TestCase):
         self.assertIn("status: draft", (self.repo / inc).read_text())
         self.assertStep("agent", "P1", "Shape INC-001")
 
+    def run_status(self, *args):
+        return subprocess.run([sys.executable, ".process/status.py", *args], cwd=self.repo,
+                              capture_output=True, text=True)
+
+    def test_model_class_per_step(self):
+        s = self.assertStep("agent", "P0", "Complete P0", model_class="standard", effort="medium")
+        self.assertIsNone(s["model"], "no adapter, so no concrete model is mapped")
+        self.edit(".process/config.yaml", 'standard: {model: ""', 'standard: {model: "mid-model"')
+        self.assertStep("agent", "P0", "Complete P0", model="mid-model")
+        self.edit(".process/config.yaml", "tier: T2", "tier: T3")
+        self.assertStep("agent", "P0", "Complete P0", model_class="deep", effort="high")
+
+    def test_budget_stop_loss(self):
+        for f in ("docs/brief.md", "AGENTS.md", "docs/standards.md"):
+            self.fill_placeholders(f)
+        self.edit("docs/brief.md", "status: draft", "status: in-review")
+        self.review("G0")
+        self.record("G0", "--decision", "approved", "--statement", "Go.")
+        inc = "docs/increments/INC-001-walking-skeleton.md"
+        self.edit(inc, "budget: M", "budget: S")
+        self.assertStep("agent", "P1", "Shape INC-001", budget="0 of 10 agent steps (S)")
+        self.assertEqual(self.run_status("log-step", "INC-001", "--steps", "9").returncode, 0)
+        r = self.run_status("log-step", "INC-001", "--escalated", "shaping to deep: unclear domain")
+        self.assertIn("10 agent steps of 10", r.stdout)
+        text = (self.repo / inc).read_text()
+        self.assertIn("spent: 10", text)
+        self.assertIn("# agent steps used", text, "the template comment survives")
+        self.assertIn("shaping to deep: unclear domain", text)
+        self.assertStep("owner", "P1", "has used its budget", increment="INC-001")
+        self.assertNotEqual(self.run_status("set-budget", "INC-001", "XL", "--statement", "x").returncode, 0)
+        self.assertNotEqual(self.run_status("set-budget", "INC-001", "M", "--statement", " ").returncode, 0)
+        self.assertEqual(self.run_status("set-budget", "INC-001", "M", "--statement", "Extend to M.").returncode, 0)
+        self.assertStep("agent", "P1", "Shape INC-001", budget="10 of 20 agent steps (M)")
+        self.assertIn('budget S -> M (Owner: "Extend to M.")', (self.repo / inc).read_text())
+        check = subprocess.run([sys.executable, ".process/check.py"], cwd=self.repo, capture_output=True, text=True)
+        self.assertNotIn("budget-exceeded", check.stdout)
+        self.assertIn("models-not-configured", check.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

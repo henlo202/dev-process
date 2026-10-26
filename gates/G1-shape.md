@@ -19,6 +19,7 @@ at what it showed. **A working prototype is better evidence than a paragraph.**
 - [ ] Open questions were answered by spikes, or are recorded as assumptions I accept.
 - [ ] Nothing contradicts the initiative brief's non-goals.
 - [ ] Every finding in the reviewer summary has an answer.
+- [ ] The [budget](../guides/resource-economy.md#2-budgets-and-stop-loss) (S/M/L) fits the work, and the tier is right (it sets the model classes).
 
 ## Design scrutiny (T3 only)
 - [ ] Every hard-to-reverse decision has an ADR with real alternatives, ideally compared through a spike.

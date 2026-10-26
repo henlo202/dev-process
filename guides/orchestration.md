@@ -28,11 +28,21 @@ In tools with subagents (Claude Code: `scaffold.py --adapter claude` creates
 `.claude/agents/dev-process-<role>.md`), the orchestrator delegates each step to
 the matching role subagent. This keeps the main conversation small during long
 builds, and runs every review in a fresh context, as the reviewer rules require.
+Each subagent runs on its role's [model class](resource-economy.md), so design
+work goes to a stronger model and mechanical work to a cheaper one.
+
+## Keeping costs down
+- Run the main session on your `standard` model; it only orchestrates.
+- `status.py` names the model class for every step, and stops at the increment's budget.
+- After each gate decision, start a fresh session (or compact). The repository holds the state.
+
+See [resource economy](resource-economy.md).
 
 ## What still needs you
 - **Starting a session.** Open your agent tool and say "continue". Unattended triggers (schedules, issue labels) may come later.
 - **Gate decisions and merges.** By design. The orchestrator never approves, merges or releases on its own.
-- **Unblocking.** When a step is blocked (a conflicting requirement, a guardrail refusal it cannot fix properly), the orchestrator stops and asks.
+- **Unblocking.** When a step is blocked (a conflicting requirement, a guardrail refusal it cannot fix properly), or keeps failing after one escalation, the orchestrator stops and asks.
+- **Budgets.** When an increment has used its budget, you decide: extend it, cut scope or stop.
 
 ## Checking the state yourself
 ```bash

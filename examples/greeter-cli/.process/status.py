@@ -9,10 +9,17 @@ the Owner, can resume at any time. Copied into projects as .process/status.py.
     python .process/status.py record-gate G1 --increment INC-002 --decision approved \
         --statement "Approved, go ahead." [--conditions "..."]
     python .process/status.py record-gate G3 --release 0.2.0 --decision approved --statement "Ship it."
+    python .process/status.py log-step INC-002 [--escalated "S3 to deep: race in the exporter"]
+    python .process/status.py set-budget INC-002 L --statement "Extend it to L."
 
 record-gate writes the Owner's decision, quoted verbatim, as a gate record. It
 refuses unless that exact gate is the one currently awaiting the Owner. Agents
 may run it only to record a decision the Owner has explicitly stated (PDR-0008).
+
+Every agent step names the model class to use (deep / standard / fast) and the
+model it maps to in .process/config.yaml. log-step counts an agent step against
+the increment's budget; when the budget is used up, the next step is the
+Owner's: extend it (set-budget, with the Owner's words), cut scope or stop (PDR-0010).
 
 Requires: Python 3.9+, PyYAML.
 """
@@ -35,6 +42,7 @@ FENCE = re.compile(r"```.*?```|`[^`\n]+`", re.DOTALL)
 SLICE = re.compile(r"^\s*[-*]\s+\[([ xX])\]\s+(S\d+)\b[:\s]*(.*)$", re.MULTILINE)
 VERSION_HEADING = re.compile(r"^## \[(\d+\.\d+\.\d+)\]", re.MULTILINE)
 GATE_NAMES = {"G0": "Go / No-go", "G1": "Shape approved", "G2": "Merge approved", "G3": "Release approved"}
+DEFAULT_BUDGETS = {"S": 10, "M": 20, "L": 35}
 PHASE_NAMES = {"P0": "Initiate", "P1": "Shape", "P2": "Build", "P3": "Verify", "P4": "Release", "P5": "Learn"}
 
 
@@ -49,6 +57,10 @@ class Step:
     release: str | None = None
     detail: str = ""
     evidence: list[str] = field(default_factory=list)
+    model_class: str | None = None  # deep | standard | fast, for agent steps
+    model: str | None = None        # the concrete model from .process/config.yaml, if configured
+    effort: str | None = None
+    budget: str | None = None       # e.g. "7 of 20 agent steps (M)"
 
 
 # ------------------------------------------------------------------ reading
@@ -87,6 +99,9 @@ class Project:
     def __init__(self, root: Path):
         self.root = root
         self.config = yaml.safe_load((root / ".process" / "config.yaml").read_text(encoding="utf-8")) or {}
+        snapshot = root / ".process" / "process.yaml"
+        self.process = yaml.safe_load(snapshot.read_text(encoding="utf-8")) if snapshot.is_file() else {}
+        self.economy = self.config.get("economy") or {}
         self.gates = []
         gate_dir = root / "docs" / "gates"
         if gate_dir.is_dir():
@@ -120,6 +135,42 @@ class Project:
 
     def tagged(self, version: str) -> bool:
         return bool(git(self.root, "tag", "-l", version, f"v{version}"))
+
+    def increment(self, iid: str | None) -> dict | None:
+        return next((i for i in self.increments if str(i.get("increment")) == iid), None)
+
+    def budget(self, inc: dict) -> tuple[int, int, str] | None:
+        """(spent, limit, label) for an increment with a budget, else None."""
+        raw = inc.get("budget")
+        budgets = {**DEFAULT_BUDGETS, **(self.economy.get("budgets") or {})}
+        limit = budgets.get(str(raw)) if not isinstance(raw, int) else raw
+        if not isinstance(limit, int):
+            return None
+        label = f" ({raw})" if not isinstance(raw, int) else ""
+        return int(inc.get("spent") or 0), limit, label
+
+    def model_class(self, step: Step) -> str:
+        """The step's model class: the skill's (or its role's) default, overridden for the work's tier."""
+        skill = next((s for s in self.process.get("skills", []) if s["id"] == step.skill), None)
+        role_id = skill["role"] if skill and skill.get("role") else (None if skill else "orchestrator")
+        entry = next((r for r in self.process.get("roles", []) if r["id"] == role_id), None) or skill or {}
+        inc = self.increment(step.increment) or {}
+        tier = str(inc.get("tier") or self.config.get("tier", "T2"))
+        return (entry.get("tier_model_class") or {}).get(tier) or entry.get("model_class") or "standard"
+
+    def resolve(self, step: Step) -> Step:
+        if step.actor != "agent":
+            return step
+        step.model_class = self.model_class(step)
+        mapped = (self.economy.get("models") or {}).get(step.model_class) or {}
+        step.model = mapped.get("model") or None
+        step.effort = mapped.get("effort") or next(
+            (c.get("effort") for c in self.process.get("model_classes", []) if c["id"] == step.model_class), None)
+        inc = self.increment(step.increment)
+        b = self.budget(inc) if inc else None
+        if b:
+            step.budget = f"{b[0]} of {b[1]} agent steps{b[2]}"
+        return step
 
 
 # ------------------------------------------------------------------ deciding
@@ -170,6 +221,26 @@ def release_step(p: Project) -> Step | None:
 
 
 def next_step(p: Project) -> Step:
+    return p.resolve(budget_stop(p, decide(p)))
+
+
+def budget_stop(p: Project, step: Step) -> Step:
+    """Stop-loss: agent work on an increment whose budget is used up goes to the Owner first.
+    Bookkeeping (no skill) and finished increments are exempt."""
+    inc = p.increment(step.increment) if step.actor == "agent" and step.skill else None
+    if inc and inc.get("status") == "done":
+        inc = None
+    b = p.budget(inc) if inc else None
+    if not b or b[0] < b[1]:
+        return step
+    return Step(step.phase, "owner", f"{step.increment} has used its budget ({b[0]} of {b[1]} agent steps{b[2]}): "
+                "extend it, cut scope, or stop", increment=step.increment,
+                evidence=[inc["_path"].relative_to(p.root).as_posix()],
+                detail=f"Next agent step would be: {step.action}. Extend with `status.py set-budget "
+                       f"{step.increment} <S|M|L|steps> --statement \"<your words>\"`.")
+
+
+def decide(p: Project) -> Step:
     root = p.root
     # P0: once per initiative
     if not p.gate_approved("G0"):
@@ -196,8 +267,9 @@ def next_step(p: Project) -> Step:
     for inc in reversed(p.increments):
         if inc.get("status") == "done" and not section(inc["_text"], "Learnings"):
             iid = str(inc["increment"])
-            return Step("P5", "agent", f"Draft the Learnings for {iid} from its PRs and demo, then ask the Owner "
-                        "to confirm or edit them", increment=iid)
+            return Step("P5", "agent", f"Draft the Learnings for {iid} from its PRs and demo, including its "
+                        "resource use, then ask the Owner to confirm or edit them", "dev-process-documenter",
+                        increment=iid)
     # 4. shape the next increment
     for inc in p.increments:
         iid = str(inc["increment"])
@@ -263,6 +335,53 @@ def record_gate(p: Project, args) -> int:
     return 0
 
 
+def set_frontmatter(inc: dict, key: str, value) -> None:
+    head, sep, body = inc["_text"].partition("\n---")
+    line = f"{key}: {yaml.safe_dump(value, default_flow_style=True, width=1000).strip().removesuffix(chr(10) + '...')}"
+    if re.search(rf"^{key}:", head, re.MULTILINE):
+        head = re.sub(rf"^{key}:[^#\n]*?(\s*#.*)?$", lambda m: line + (m.group(1) or ""), head, count=1,
+                      flags=re.MULTILINE)
+    else:
+        head = head.rstrip("\n") + "\n" + line
+    inc["_text"] = head + sep + body
+    inc["_path"].write_text(inc["_text"], encoding="utf-8")
+
+
+def log_step(p: Project, args) -> int:
+    inc = p.increment(args.increment)
+    if not inc:
+        print(f"Unknown increment {args.increment}.")
+        return 1
+    spent = int(inc.get("spent") or 0) + args.steps
+    set_frontmatter(inc, "spent", spent)
+    if args.escalated:
+        set_frontmatter(inc, "escalations", list(inc.get("escalations") or []) + [args.escalated.strip()])
+    b = p.budget({**inc, "spent": spent})
+    print(f"{args.increment}: {spent} agent steps" + (f" of {b[1]}{b[2]}" if b else " (no budget set)"))
+    return 0
+
+
+def set_budget(p: Project, args) -> int:
+    inc = p.increment(args.increment)
+    if not inc:
+        print(f"Unknown increment {args.increment}.")
+        return 1
+    if not args.statement.strip():
+        print("Refusing: --statement must quote the Owner's decision verbatim. Only the Owner changes a budget.")
+        return 1
+    new = int(args.budget) if args.budget.isdigit() else args.budget
+    if p.budget({**inc, "budget": new}) is None:
+        print(f"Refusing: budget must be one of {sorted({**DEFAULT_BUDGETS, **(p.economy.get('budgets') or {})})} "
+              "or a number of agent steps.")
+        return 1
+    old = inc.get("budget")
+    set_frontmatter(inc, "budget", new)
+    set_frontmatter(inc, "escalations", list(inc.get("escalations") or [])
+                    + [f"budget {old} -> {new} (Owner: \"{args.statement.strip()}\")"])
+    print(f"{args.increment}: budget {old} -> {new}")
+    return 0
+
+
 # ------------------------------------------------------------------ output
 
 def utf8_stdio() -> None:
@@ -288,6 +407,14 @@ def main(argv=None) -> int:
     rg.add_argument("--increment")
     rg.add_argument("--release")
     rg.add_argument("--conditions")
+    ls = sub.add_parser("log-step", help="count agent steps against an increment's budget")
+    ls.add_argument("increment")
+    ls.add_argument("--steps", type=int, default=1)
+    ls.add_argument("--escalated", help="record a model-class escalation and its reason")
+    sb = sub.add_parser("set-budget", help="change an increment's budget on the Owner's stated decision")
+    sb.add_argument("increment")
+    sb.add_argument("budget", help="S, M, L or a number of agent steps")
+    sb.add_argument("--statement", required=True, help="the Owner's words, verbatim")
     args = ap.parse_args(argv)
 
     root = Path(args.project).resolve()
@@ -299,6 +426,10 @@ def main(argv=None) -> int:
     project = Project(root)
     if args.command == "record-gate":
         return record_gate(project, args)
+    if args.command == "log-step":
+        return log_step(project, args)
+    if args.command == "set-budget":
+        return set_budget(project, args)
 
     step = next_step(project)
     if args.json:
@@ -311,6 +442,11 @@ def main(argv=None) -> int:
     print(f"  Phase:  {step.phase} · {PHASE_NAMES[step.phase]}")
     print(f"  Next:   {step.action}")
     print(f"  Who:    {who}")
+    if step.model_class:
+        model = f" → {step.model}" if step.model else " (no model configured: set economy.models)"
+        print(f"  Model:  {step.model_class}{model}, effort {step.effort}")
+    if step.budget:
+        print(f"  Budget: {step.budget}")
     if step.detail:
         print(f"  Note:   {step.detail}")
     for e in step.evidence:

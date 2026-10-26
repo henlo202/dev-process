@@ -6,6 +6,6 @@ description: Run the dev-process conformance and traceability check, explain the
 
 ## Steps
 1. Run `python .process/check.py`. It never fails the build; it reports ❌ errors, ⚠️ warnings and ℹ️ info.
-2. Fix what you can, in this order: missing required artefacts, invalid frontmatter, untested approved requirements, increment size or demo problems, placeholders.
+2. Fix what you can, in this order: missing required artefacts, invalid frontmatter, untested approved requirements, increment size or demo problems, budget and economy findings, placeholders. Do not change a budget or the model mapping yourself: propose it to the Owner.
 3. For findings that should not be fixed, **propose** a waiver to the Owner, with the rule ID, a reason and an expiry date. Only the Owner adds waivers to `.process/config.yaml`.
 4. Summarise for the Owner: what you fixed, what remains, and what you propose to waive.

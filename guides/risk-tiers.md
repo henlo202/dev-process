@@ -18,6 +18,9 @@ artefacts must exist.
 | **Design** | none | Design notes in the increment brief, plus an ADR if needed | Design notes, ADRs, threat model, reviewed in depth at G1 |
 | **Spikes** | rarely | when a question is open | expected for hard-to-reverse decisions |
 | **Cooling-off** | none | none | G1: approve the next day at the earliest |
+| **Reviews** | none: CI and your merge | one `standard` review per gate | `deep` reviews, ideally by a different model than the author |
+| **Models** | mostly `fast` | mostly `standard`; architect `deep` | `deep` for design and review |
+| **Budget** | none | per increment (S/M/L) | per increment (S/M/L) |
 
 When unsure, pick the higher tier. An agent may **propose** a tier, but only the
 Owner decides it.
@@ -25,3 +28,5 @@ Owner decides it.
 ## Escalation
 If a T1 or T2 change turns out to touch something on the T3 list, stop and
 re-tier it. The Implementer agent must flag this rather than continue.
+
+Model classes and budgets per tier are explained in the [resource economy guide](resource-economy.md).

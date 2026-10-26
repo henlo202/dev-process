@@ -5,7 +5,7 @@
 
 process:
   name: dev-process
-  version: 0.5.0
+  version: 0.6.0
   language: en
   owner: Owner
   summary: >
@@ -27,6 +27,27 @@ tiers:
     doc: guides/risk-tiers.md
     summary: New architecture, security-sensitive work, data migrations or anything hard to reverse. Adds design scrutiny at G1.
 
+# Model classes: abstract capability levels. Each project maps them to concrete
+# models in .process/config.yaml (economy.models), so the process stays tool- and
+# model-neutral. Roles and task skills name a default class; tier_model_class
+# overrides it for work of a given tier. See guides/resource-economy.md.
+model_classes:
+  - id: deep
+    name: Deep
+    effort: high
+    doc: guides/resource-economy.md
+    summary: The most capable model. Design choices, trade-offs, judging risk, hard debugging, T3 reviews.
+  - id: standard
+    name: Standard
+    effort: medium
+    doc: guides/resource-economy.md
+    summary: A mid-tier model. Code, tests, requirements and reviews against a clear brief.
+  - id: fast
+    name: Fast
+    effort: low
+    doc: guides/resource-economy.md
+    summary: A small, cheap model. Mechanical work such as doc edits, changelogs, formatting, summaries and running scripts.
+
 roles:
   - id: owner
     name: Owner
@@ -38,41 +59,54 @@ roles:
     kind: agent
     doc: roles/roles.md
     summary: Runs the process. Works out the next step from the repository, delegates it to the right role, and stops only at gates.
+    model_class: standard
   - id: analyst
     name: Analyst agent
     kind: agent
     doc: roles/roles.md
     summary: Elicits and writes requirements and acceptance criteria while shaping an increment.
+    model_class: standard
+    tier_model_class: {T3: deep}
   - id: architect
     name: Architect agent
     kind: agent
     doc: roles/roles.md
     summary: Shapes the "how" of an increment, runs design spikes, writes ADRs and the test strategy.
+    model_class: deep
   - id: planner
     name: Planner agent
     kind: agent
     doc: roles/roles.md
     summary: Keeps increments small and writes the increment brief with its task slices.
+    model_class: standard
   - id: implementer
     name: Implementer agent
     kind: agent
     doc: roles/roles.md
     summary: Writes code and tests test-first, runs throwaway spikes, and records demos.
+    model_class: standard
+    tier_model_class: {T1: fast}
   - id: tester
     name: Tester agent
     kind: agent
     doc: roles/roles.md
     summary: Derives tests from acceptance criteria and hunts for gaps.
+    model_class: standard
+    tier_model_class: {T1: fast}
   - id: reviewer
     name: Reviewer agent
     kind: agent
     doc: roles/roles.md
     summary: Critiques artefacts and code before every human gate.
+    model_class: standard
+    tier_model_class: {T3: deep}
   - id: documenter
     name: Documenter agent
     kind: agent
     doc: roles/roles.md
     summary: Keeps technical, operational and user documentation current.
+    model_class: fast
+    tier_model_class: {T3: standard}
 
 # The process is a loop: P0 runs once per initiative, then every change runs
 # through the increment loop P1..P5 and back to P1 (T1 changes enter at P2).
@@ -157,7 +191,10 @@ gates:
     after: P3
     approver: owner
     tiers: [T1, T2, T3]
-    evidence: [demo, traceability-report, conformance-report, reviewer-summary]
+    evidence: [demo, traceability-report, conformance-report]
+    tier_evidence:
+      T2: [reviewer-summary]
+      T3: [reviewer-summary]
   - id: G3
     name: Release approved
     doc: gates/G3-release.md
@@ -368,16 +405,17 @@ skills:
   - {id: dev-process-tester, kind: role, role: tester, doc: agents/skills/dev-process-tester/SKILL.md, phases: [P2, P3], bundle: []}
   - {id: dev-process-reviewer, kind: role, role: reviewer, doc: agents/skills/dev-process-reviewer/SKILL.md, phases: [P0, P1, P3, P4], bundle: [artefacts/templates/reviewer-summary.md]}
   - {id: dev-process-documenter, kind: role, role: documenter, doc: agents/skills/dev-process-documenter/SKILL.md, phases: [P2, P4, P5], bundle: []}
-  - {id: dev-process-shape-increment, kind: task, role: null, doc: agents/skills/dev-process-shape-increment/SKILL.md, phases: [P1], bundle: [artefacts/templates/increment.md]}
-  - {id: dev-process-spike, kind: task, role: null, doc: agents/skills/dev-process-spike/SKILL.md, phases: [P0, P1, P2], bundle: [artefacts/templates/spike-report.md]}
-  - {id: dev-process-demo, kind: task, role: null, doc: agents/skills/dev-process-demo/SKILL.md, phases: [P3], bundle: []}
-  - {id: dev-process-conformance-check, kind: task, role: null, doc: agents/skills/dev-process-conformance-check/SKILL.md, phases: [P1, P3, P4], bundle: []}
+  - {id: dev-process-shape-increment, kind: task, role: null, model_class: standard, tier_model_class: {T3: deep}, doc: agents/skills/dev-process-shape-increment/SKILL.md, phases: [P1], bundle: [artefacts/templates/increment.md]}
+  - {id: dev-process-spike, kind: task, role: null, model_class: standard, doc: agents/skills/dev-process-spike/SKILL.md, phases: [P0, P1, P2], bundle: [artefacts/templates/spike-report.md]}
+  - {id: dev-process-demo, kind: task, role: null, model_class: fast, doc: agents/skills/dev-process-demo/SKILL.md, phases: [P3], bundle: []}
+  - {id: dev-process-conformance-check, kind: task, role: null, model_class: fast, doc: agents/skills/dev-process-conformance-check/SKILL.md, phases: [P1, P3, P4], bundle: []}
 
 guides:
   - {id: orchestration, name: Running the process day to day, doc: guides/orchestration.md}
   - {id: increments, name: Increments & the loop, doc: guides/increments.md}
   - {id: spikes, name: Spikes (build to learn), doc: guides/spikes.md}
   - {id: guardrails, name: Guardrails (enforcement), doc: guides/guardrails.md}
+  - {id: resource-economy, name: Resource economy, doc: guides/resource-economy.md}
   - {id: risk-tiers, name: Risk tiers, doc: guides/risk-tiers.md}
   - {id: requirements-guide, name: Requirements handling, doc: guides/requirements.md}
   - {id: quality-assurance, name: Quality assurance & testing, doc: guides/quality-assurance.md}
