@@ -16,7 +16,7 @@ All notable changes to dev-process are documented here. The format follows
 - **`status.py`** names `model_class`, `model` and `effort` for every agent step, and shows the increment's budget.
 - **Budgets and stop-loss:** increment frontmatter `budget`, `spent` and `escalations`. `status.py log-step` counts steps and records escalations. When the budget is used up, the next step is the Owner's. `status.py set-budget` changes a budget on the Owner's verbatim word.
 - **Conformance checks** (warn only): `economy-not-configured`, `models-not-configured`, `budget-missing`, `budget-invalid`, `budget-exceeded`, `agents-context-too-long`.
-- **Claude Code adapter:** maps the classes to `opus`, `sonnet` and `haiku`, and writes `model` and `effort` into each subagent from its role's class.
+- **Claude Code adapter:** maps the classes to `opus`, `sonnet` and `haiku`, writes `model` and `effort` into each subagent from its role's class, and makes the `standard` model the main session's default in `.claude/settings.json` (an existing `model` setting is kept).
 - Guide: [Resource economy](guides/resource-economy.md). Glossary entries for agent step, budget, escalation and model class.
 - The site shows model classes on each skill page and on the Roles page.
 - Tests for model-class resolution, budgets, `log-step` and `set-budget`.
@@ -38,7 +38,7 @@ All notable changes to dev-process are documented here. The format follows
 2. If you do not use the Claude adapter, map `economy.models` to your tool's models.
 3. Add the resource-economy bullet from `.process/templates/AGENTS.md` to your `AGENTS.md`.
 4. Add `tier` and `budget` (and `spent: 0`) to increments that are not yet `done`.
-5. Run your main agent session on your `standard` model.
+5. Run your main agent session on your `standard` model (with the Claude adapter, the upgrade sets this unless `.claude/settings.json` already names a model).
 6. Run `python .process/check.py` and `python .process/status.py`.
 
 ## [0.5.0] - 2026-10-19

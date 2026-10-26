@@ -29,7 +29,8 @@ documenter works on `fast`; the rest work on `standard`.
 The **orchestrator** is `standard`. It runs in your main session, which most tools
 cannot switch per step, and a `fast` model is unreliable at following the whole
 loop and writing gate briefs. So the main session should run on your `standard`
-model, and delegate `deep` work to subagents.
+model, and delegate `deep` work to subagents. Adapters may set this as the
+project default; the Claude adapter does.
 
 ### Mapping classes to models
 In `.process/config.yaml`:

@@ -62,7 +62,7 @@ comes next, runs it, and stops only when you need to decide at a gate. You
 state outcomes ("next, users should export CSV") and reply to gates
 ("approved"); everything in between runs on its own.
 
-To save quota, run your main session on a mid-tier model: the orchestrator
+To save quota, run your main session on a mid-tier model (the Claude adapter makes this the project default): the orchestrator
 delegates design and T3 reviews to subagents on stronger models, and mechanical
 work to cheaper ones (`economy.models` in `.process/config.yaml`).
 

@@ -24,6 +24,6 @@ untouched and prints the hook entry to add by hand.
 `scaffold.py --upgrade` to regenerate the subagents.
 
 - Each subagent's `model` and `effort` come from its role's class at the project tier. For example, at T3 the reviewer runs on `opus`.
-- Run the main session (the orchestrator) on `sonnet`, and switch with `/model` only when you need to.
+- The main session (where the orchestrator runs) defaults to the `standard` model: the scaffolder adds `"model": "sonnet"` to `.claude/settings.json`. An existing `model` there is kept. Switch with `/model opus` for a hard conversation, or set your own default in `.claude/settings.local.json`.
 - When delegating, the orchestrator can pass the step's `model` from `status.py` to override the subagent default, for example for an escalation.
 - Optional: a `maxTurns` line in a subagent file puts a hard limit on runaway subagents.

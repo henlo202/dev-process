@@ -165,6 +165,15 @@ def upgrade_claude_hook(current: dict, template: dict) -> bool:
     return changed
 
 
+def default_claude_model(settings: dict, config: dict) -> dict | None:
+    """Settings with the main-session model set to the `standard` class, or None if it is already set
+    (an explicit choice is kept) or the class is not mapped. The orchestrator runs there (PDR-0010)."""
+    model = (((config.get("economy") or {}).get("models") or {}).get("standard") or {}).get("model")
+    if not model or "model" in settings:
+        return None
+    return {"model": model, **settings}
+
+
 def install_adapter(name: str, project: Path, process: dict, created: list, skipped: list):
     if name == "claude":
         src = ROOT / "adapters" / "claude"
@@ -175,16 +184,23 @@ def install_adapter(name: str, project: Path, process: dict, created: list, skip
         install_claude_subagents(process, project / ".claude" / "agents", config)
         created.append(".claude/agents/dev-process-* (refreshed)")
         settings = project / ".claude" / "settings.json"
+        template = json.loads((src / "settings.json").read_text(encoding="utf-8"))
         if settings.exists():
             current = json.loads(settings.read_text(encoding="utf-8") or "{}")
-            if upgrade_claude_hook(current, json.loads((src / "settings.json").read_text(encoding="utf-8"))):
-                settings.write_text(json.dumps(current, indent=2) + "\n", encoding="utf-8")
+            hook_updated = upgrade_claude_hook(current, template)
+            with_model = default_claude_model(current, config)
+            if hook_updated or with_model:
+                settings.write_text(json.dumps(with_model or current, indent=2) + "\n", encoding="utf-8")
+            if hook_updated:
                 created.append(".claude/settings.json (PreToolUse hook command updated)")
-            elif "pre_tool_use" not in json.dumps(current):
+            if with_model:
+                created.append(f".claude/settings.json (default model set to `{with_model['model']}`)")
+            if not hook_updated and "pre_tool_use" not in json.dumps(current):
                 skipped.append(".claude/settings.json (exists: add the PreToolUse hook from "
                                ".process/adapters/claude/settings.json by hand)")
         else:
-            write_new(settings, (src / "settings.json").read_text(encoding="utf-8"), created, skipped, project)
+            write_new(settings, json.dumps(default_claude_model(template, config) or template, indent=2) + "\n",
+                      created, skipped, project)
 
 
 def record_adapters(project: Path, adapters: list[str]):
