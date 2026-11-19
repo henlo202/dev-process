@@ -35,6 +35,20 @@ class MarkdownTest(unittest.TestCase):
         self.assertIn('<a id="req-016"></a>', wb.render_markdown("### REQ-016: Hours"))
 
 
+class RequirementParsingTest(unittest.TestCase):
+    def test_other_id_prefixes_and_dash_separator(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs" / "requirements").mkdir(parents=True)
+            (root / "docs" / "requirements" / "r.md").write_text(
+                "\n".join(["# R", "", "### GAR-001 — Token auth", "- **Priority:** Must", "- **Status:** Approved",
+                           "- **Implementation:** Implemented", "", "### REQ-002: Colon style", "- **Priority:** should", "",
+                           "## 1. Conventions", "### 1.1 Not a requirement", ""]), encoding="utf-8")
+            rows = wb.parse_requirements(root)
+            self.assertEqual([(r["id"], r["title"], r["status"], r["impl"]) for r in rows],
+                             [("GAR-001", "Token auth", "Approved", "Implemented"), ("REQ-002", "Colon style", "", "")])
+
+
 class SafePathTest(unittest.TestCase):
     def test_only_markdown_and_images_inside_project(self):
         with tempfile.TemporaryDirectory() as tmp:

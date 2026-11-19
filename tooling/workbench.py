@@ -236,11 +236,12 @@ def parse_requirements(root: Path) -> list[dict]:
     for path in md_files(root, "docs/requirements"):
         rel = path.relative_to(root).as_posix()
         text = split_frontmatter(read(path))[1]
-        for m in re.finditer(r"^###\s+((?:REQ|NFR)-\d+):\s*(.+?)\s*$(.*?)(?=^#{1,3}\s|\Z)", text, re.MULTILINE | re.DOTALL):
+        for m in re.finditer(r"^###\s+([A-Z][A-Z0-9]*-\d+)[ 	]*(?::|—|–|-)[ 	]*(.+?)\s*$(.*?)(?=^#{1,3}\s|\Z)", text, re.MULTILINE | re.DOTALL):
             body = m.group(3)
             field = lambda name: (re.search(rf"\*\*{name}:\*\*\s*(.+)", body) or [None, ""])[1].strip()  # noqa: E731
             rows.append({"id": m.group(1), "title": m.group(2), "priority": field("Priority"),
-                         "status": field("Status"), "file": rel, "kind": m.group(1)[:3]})
+                         "status": field("Status"), "impl": field("Implementation"), "file": rel,
+                         "kind": m.group(1).split("-")[0]})
     return rows
 
 
@@ -723,13 +724,16 @@ class Site:
                 covered.setdefault(r, []).append(inc["id"])
         if not reqs:
             return self.page(slug, m, "requirements", "Requirements", '<div class="card mut">No requirements written yet (docs/requirements/).</div>')
+        has_impl = any(r["impl"] for r in reqs)
         rows = "".join(
             f'<tr data-s="{esc((r["id"] + " " + r["title"] + " " + r["status"]).lower())}"><td><a href="{self.doc_href(slug, r["file"])}#{r["id"].lower()}"><b>{esc(r["id"])}</b></a></td>'
             f'<td>{esc(r["title"])}</td><td>{badge(r["priority"])}</td><td>{badge(r["status"])}</td>'
-            f'<td class="small">{esc(", ".join(covered.get(r["id"], [])) or "–")}</td></tr>' for r in reqs)
+            + (f'<td>{badge(r["impl"])}</td>' if has_impl else "")
+            + f'<td class="small">{esc(", ".join(covered.get(r["id"], [])) or "–")}</td></tr>' for r in reqs)
+        impl_head = "<th>Implementation</th>" if has_impl else ""
         return self.page(slug, m, "requirements", "Requirements",
                          '<input class="filter" placeholder="Filter requirements…"><div class="card scroll"><table><thead><tr><th>ID</th><th>Requirement</th>'
-                         f"<th>Priority</th><th>Status</th><th>In increment</th></tr></thead><tbody>{rows}</tbody></table></div>")
+                         f"<th>Priority</th><th>Status</th>{impl_head}<th>In increment</th></tr></thead><tbody>{rows}</tbody></table></div>")
 
     def decisions(self, slug: str, m: FullModel) -> str:
         adrs = m.adrs()
