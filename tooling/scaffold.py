@@ -88,6 +88,7 @@ def refresh_process_dir(project: Path, process: dict):
     shutil.copy2(ROOT / "process.yaml", dot / "process.yaml")
     shutil.copy2(ROOT / "tooling" / "check.py", dot / "check.py")
     shutil.copy2(ROOT / "tooling" / "status.py", dot / "status.py")
+    shutil.copy2(ROOT / "tooling" / "workbench.py", dot / "workbench.py")
     shutil.copy2(ROOT / "tooling" / "ci" / "process-check.sh", dot / "process-check.sh")
     copy_tree(ROOT / "artefacts" / "templates", dot / "templates")
     copy_tree(ROOT / "tooling" / "guardrails", dot / "guardrails")

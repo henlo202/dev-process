@@ -31,6 +31,7 @@ jobs:
           diff -q ../../tooling/check.py .process/check.py
           diff -q ../../tooling/guardrails/guard.py .process/guardrails/guard.py
           diff -q ../../tooling/status.py .process/status.py
+          diff -q ../../tooling/workbench.py .process/workbench.py
           python .process/status.py
           pip install ruff
           python .process/guardrails/guard.py ci

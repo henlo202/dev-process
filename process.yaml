@@ -5,7 +5,7 @@
 
 process:
   name: dev-process
-  version: 0.6.0
+  version: 0.7.0
   language: en
   owner: Owner
   summary: >
@@ -412,6 +412,7 @@ skills:
 
 guides:
   - {id: orchestration, name: Running the process day to day, doc: guides/orchestration.md}
+  - {id: workbench, name: Workbench (live view in a browser), doc: guides/workbench.md}
   - {id: increments, name: Increments & the loop, doc: guides/increments.md}
   - {id: spikes, name: Spikes (build to learn), doc: guides/spikes.md}
   - {id: guardrails, name: Guardrails (enforcement), doc: guides/guardrails.md}

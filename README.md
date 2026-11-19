@@ -66,6 +66,12 @@ To save quota, run your main session on a mid-tier model (the Claude adapter mak
 delegates design and T3 reviews to subagents on stronger models, and mechanical
 work to cheaper ones (`economy.models` in `.process/config.yaml`).
 
+### The workbench
+`python .process/workbench.py` serves a live, read-only view of the project in a
+browser (add `--lan` to reach it from other devices on the network): the current
+phase and next step, requirements, ADRs, increments and every document, always
+read straight from the repository. See [guides/workbench.md](guides/workbench.md).
+
 ## Using it with agents
 Point any agent at the project's `AGENTS.md`. Agent instructions are **skills**
 in `.process/skills/`, which tools that support the format discover
