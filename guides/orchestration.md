@@ -23,6 +23,9 @@ orchestrating agent does everything in between.
 "Continue", "what's next" or `/dev-process-orchestrator` (in tools that expose
 skills as commands) picks up from wherever the project is.
 
+## Seeing where you are
+`python .process/workbench.py` shows the same state as a live web page: phase, next step, requirements, ADRs, increments and documents. See the [workbench](workbench.md).
+
 ## Subagents
 In tools with subagents (Claude Code: `scaffold.py --adapter claude` creates
 `.claude/agents/dev-process-<role>.md`), the orchestrator delegates each step to

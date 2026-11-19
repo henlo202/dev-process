@@ -22,4 +22,5 @@ python examples/greeter-cli/.process/check.py --project examples/greeter-cli
 - English only. Keep documents short; link instead of repeating.
 - Project neutral: never name or describe a project that uses the process, even when the change was found there. Invent generic examples. See [project neutrality](governance/change-process.md#project-neutrality).
 - Agents may propose changes via PRs but never merge. Only the Owner merges.
+- `tooling/workbench.py` is the single source of the workbench: copy it to `examples/greeter-cli/.process/` (CI diffs it) and to dev-process-lite's `template/lite/`. It must stay read-only and stdlib-only.
 - `tooling/check.py` must stay dependency-light (stdlib plus PyYAML) and must exit 0 unless `--strict` is given.

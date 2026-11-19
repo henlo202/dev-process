@@ -7,6 +7,16 @@ All notable changes to dev-process are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-19
+**Workbench**: a live, read-only web view of the project, so the Owner no longer has to read Markdown files to see where things stand.
+
+### Added
+- **`workbench.py`** (`.process/workbench.py`): serves the phase and gates, the next step (who acts, model class, budget), requirements, ADRs, increments, gate decisions and every document as web pages, rendered from the repository on each request (the repository stays the single source of truth). Pages refresh when files or git state change. `--lan` makes it reachable from the local network; `--root` serves every project under a folder. Read-only, serves only Markdown and images inside the project, and has no login (trusted networks only). The same file ships in dev-process-lite.
+- Guide: [Workbench](guides/workbench.md).
+
+### Upgrade
+Re-run `python tooling/scaffold.py <project> --upgrade`, then `python .process/workbench.py`. On Windows, allow the port in the firewall for private networks before using `--lan`.
+
 ## [0.6.0] - 2026-10-26
 **Resource economy** ([PDR-0010](governance/decisions/PDR-0010-resource-economy.md)): each step runs on the smallest suitable model, increments have a budget, agents stop instead of looping, and context stays small. The process stays tool- and model-neutral.
 
